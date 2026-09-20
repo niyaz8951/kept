@@ -110,16 +110,19 @@ function updateBanner(){
  try{ const t=localStorage.getItem("kept_theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
  CUR=Store.meta("cur","AED");
  RAW=Store.txns();
- QuickAdd.init();
- History.init();
- Account.render();
- if(RAW.length){ M=build(RAW); renderAll(); }
+ const safe=(name,fn)=>{ try{ fn(); }catch(err){ console.error("Kept: "+name+" failed",err); } };
+ safe("QuickAdd",()=>QuickAdd.init());
+ safe("History",()=>History.init());
+ safe("Account",()=>Account.render());
+ if(RAW.length){ try{ M=build(RAW); renderAll(); }catch(err){ console.error("Kept: model build failed",err);
+   $$("hero").innerHTML='<div class="empty"><h2>Could not read the stored data</h2><p>Your transactions are still saved. Export them from <b>Account → Your data</b> and re-upload, or reset if the file is damaged.</p></div>'; } }
  else {
+  const tm=$$("thisMonth"); if(tm&&tm.closest(".card")) tm.closest(".card").style.display="none";
   $$("hero").innerHTML='<div class="empty"><h2>Kept starts with one question:<br>how much of your money stays yours?</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p><p><button class="bigbtn ghost" id="uploadBtn" style="width:auto;padding:10px 18px;margin-right:8px">⬆ Upload expense Excel</button><button class="bigbtn ghost" id="sampleBtn" style="width:auto;padding:10px 18px">📄 Download sample Excel</button></p></div>';
   $$("sampleBtn").addEventListener("click",()=>Account.sample());
   $$("uploadBtn").addEventListener("click",()=>{ showTab("account"); setTimeout(()=>$$("acFile").click(),120); });
   updateBanner();
  }
- if(typeof Sync!=="undefined") Sync.init();
+ if(typeof Sync!=="undefined") Promise.resolve().then(()=>Sync.init()).catch(err=>console.error("Kept: Sync failed",err));
  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 })();

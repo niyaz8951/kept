@@ -25,24 +25,25 @@ const Sync = (() => {
   }catch(e){ return {err:"SUPABASE_URL in config.js is not a valid URL."}; }
  }
  function enabled(){ return !!(rawCfg().SUPABASE_URL&&rawCfg().SUPABASE_ANON_KEY); }
- function msg(t,cls){ const m=$$("authMsg"); m.textContent=t||""; m.className="authmsg "+(cls||""); }
+ function msg(t,cls){ const m=$$("authMsg"); if(!m) return; m.textContent=t||""; m.className="authmsg "+(cls||""); }
+ function status(t){ lastErr=t||null; if(typeof Account!=="undefined"&&Account.render&&document.getElementById("acProfile")) try{ Account.render(); }catch(e){} }
 
  async function init(){
-  let badge=$$("syncBadge")||null;
-  if(!enabled()){ badge.textContent="Local only"; badge.title="Add Supabase keys in config.js to enable login + sync";
-   badge=null; return; }
+  /* The header badge no longer exists (account lives in its own section), so init must
+     never touch it — and it must never throw: a crash here kills the rest of boot. */
+  if(!enabled()){ status("Cloud backup not configured"); return; }
   const cu=cleanURL();
-  if(cu.err){ badge.textContent="Sync misconfigured"; badge.title=cu.err;
-   badge.addEventListener("click",()=>alert("Sync is not usable yet:\n\n"+cu.err)); return; }
+  if(cu.err){ status("Sync misconfigured: "+cu.err); return; }
   if(!window.supabase){ await new Promise(res=>{ const s=document.createElement("script");
    s.src="vendor/supabase.js"; s.onload=res; s.onerror=res; document.head.appendChild(s);
    setTimeout(res,4000); }); }
-  if(!window.supabase){ badge.textContent="Sync unavailable"; return; }
+  if(!window.supabase){ status("Sync library unavailable offline"); return; }
   sb=window.supabase.createClient(cu.url,(rawCfg().SUPABASE_ANON_KEY||"").trim());
   const {data}=await sb.auth.getSession(); user=data.session?.user||null;
   paintBadge();
   
   // form wiring
+  if(!$$("atSignin")) return;   // auth sheet absent — nothing to wire
   $$("atSignin").addEventListener("click",()=>setMode("signin"));
   $$("atSignup").addEventListener("click",()=>setMode("signup"));
   $$("authEye").addEventListener("click",()=>{ const p=$$("authPass");
@@ -162,5 +163,6 @@ const Sync = (() => {
  function queuePush(){ if(!sb||!user) return; clearTimeout(timer); timer=setTimeout(()=>{
    if(navigator.onLine===false){ lastErr="offline — will retry"; return; } push(); },4000); }
  window.addEventListener("online",()=>{ if(sb&&user){ lastErr=null; push(); } });
- return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,deleteRow,lastSync,openSheet,user:()=>user};
+ function openSheetSafe(){ const sh=$$("authSheet"); if(sh) openSheet(); else alert("Sign-in is not available in this deployment."); }
+ return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,deleteRow,lastSync,openSheet:openSheetSafe,user:()=>user,status};
 })();

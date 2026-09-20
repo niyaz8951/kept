@@ -1,5 +1,23 @@
 # Kept — changelog
 
+## v6 — boot crash fix (this is why every tab looked the same)
+
+- **`Sync.init()` threw on every load where Supabase keys were absent.** It still wrote to
+  the old header badge (`$$("syncBadge")`), which was removed when Account became its own
+  section — `badge.textContent` on `null` aborted boot, so `Account.render()`,
+  `History.init()`, `QuickAdd.init()` and part of the tab wiring never ran. Every tab then
+  showed whatever the shell had rendered last, Account was empty, and the avatar stayed "?".
+  Sync no longer touches the badge, reports its state through the Account panel instead,
+  and returns cleanly when the auth sheet or keys are missing.
+- **One module can no longer take down the app.** QuickAdd, History, Account and Sync each
+  boot inside their own error boundary; a failure is logged and the rest still runs. A
+  corrupted stored dataset now shows a recoverable message ("export and re-upload") instead
+  of a blank page.
+- **"This month, so far" hid itself when there is no data** instead of rendering an empty shell.
+- Cache version bumped to `kept-v6`. **After uploading the new files, hard-refresh once**
+  (Ctrl+Shift+R, or on the phone close and reopen the installed app) so the old service
+  worker releases the cached scripts.
+
 ## v5 — path banner fixes
 
 - **The banner appeared on every screen.** It is a Home panel, not a site-wide header:

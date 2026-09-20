@@ -43,7 +43,10 @@ function renderHero(){
 
 /* Live month: envelope burn-down per category + the one action for today */
 function renderThisMonth(){
- const box=$$("thisMonth"); if(!box||!M) return;
+ const box=$$("thisMonth"); if(!box) return;
+ const card=box.closest(".card");
+ if(!M){ if(card) card.style.display="none"; return; }
+ if(card) card.style.display="";
  const cur=M.months[M.months.length-1]; if(!cur){ box.innerHTML=""; return; }
  const p=M.per[cur], day=Math.max(1,new Date().getDate()), left=Math.max(0,30.44-day);
  const bud=(typeof budgetFor==="function")?budgetFor():{};
