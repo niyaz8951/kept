@@ -1,5 +1,24 @@
 # Kept — changelog
 
+## v10 — duplicates and the sync error
+
+- **"ON CONFLICT DO UPDATE command cannot affect row a second time".** Postgres refuses an
+  upsert batch that touches the same key twice. Your store held more than one row with the
+  same `(date, amount, description)` — `replaceAll()` (the Excel upload path) wrote every
+  row as-is without collapsing, so the batch carried duplicate keys and the whole push
+  failed. Three fixes: the upload now collapses identical rows before storing, `push()`
+  collapses by key before sending as a safety net, and a boot-time repair cleans any store
+  written by an earlier version.
+- **Same date + amount + description now always replaces.** `merge()` used to skip a
+  matching row, so a re-import could never correct a category or remark. It now overwrites
+  the stored row (newer category/remark wins) and reports `added` and `updated`
+  separately — one transaction, one row, always.
+- **Sync errors were painted green.** The Account panel styled every sync state as healthy;
+  failures now show in coral, and a **Repair duplicates & re-sync** button collapses any
+  duplicates, rewrites the cloud copy from this device, and tells you how many rows it
+  merged.
+- Upload confirmation now reports how many identical rows were collapsed.
+
 ## v9 — phone layout pass
 
 - **The page could scroll sideways.** Nothing constrained the document width, so any wide

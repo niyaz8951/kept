@@ -78,7 +78,7 @@ function handleUpload(e){
    if(!rows.length){ alert("No usable rows found — download the sample Excel to see the expected format."); e.target.value=""; return; }
    const cur=Store.load().length;
    if(cur && !confirm("Uploading RESTARTS Kept with this file as the new source of truth.\n\nYour current "+cur+" transactions (including daily entries)"+((typeof Sync!=="undefined"&&Sync.user&&Sync.user())?" and your cloud copy":"")+" will be replaced by the "+rows.length+" rows in this file.\n\nExport first if you need a backup. Continue?")){ e.target.value=""; return; }
-   Store.replaceAll(rows);
+   const rep=Store.replaceAll(rows);
    Store.setMeta("pathBase",null);
    RAW=Store.txns();
    M=RAW.length?build(RAW):null;
@@ -87,7 +87,7 @@ function handleUpload(e){
    if(M) renderAll();
    if(typeof History!=="undefined") History.refresh();
    if(typeof Sync!=="undefined"&&Sync.user&&Sync.user()) Sync.replaceCloud(); else if(typeof Sync!=="undefined") Sync.queuePush();
-   alert("Fresh start: "+rows.length+" transactions loaded. From here, add daily entries — Kept keeps one continuous record.");
+   alert("Fresh start: "+rep.kept+" transactions loaded"+(rep.collapsed?" ("+rep.collapsed+" identical row"+(rep.collapsed===1?"":"s")+" collapsed — same date, amount and description)":"")+". From here, add daily entries — Kept keeps one continuous record.");
    e.target.value="";
    showTab("overview");
   }catch(err){ alert("Could not read that file: "+err); e.target.value=""; }
@@ -112,6 +112,7 @@ function updateBanner(){
  CUR=Store.meta("cur","AED");
  RAW=Store.txns();
  const safe=(name,fn)=>{ try{ fn(); }catch(err){ console.error("Kept: "+name+" failed",err); } };
+ safe("Dedupe",()=>{ const n=Store.dedupe(); if(n) console.info("Kept: collapsed "+n+" duplicate rows"); });
  safe("Recurring",()=>{ if(Recurring.rules().length){ Recurring.materialize(); RAW=Store.txns(); } });
  safe("QuickAdd",()=>QuickAdd.init());
  safe("History",()=>History.init());

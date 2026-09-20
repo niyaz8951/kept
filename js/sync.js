@@ -121,6 +121,7 @@ const Sync = (() => {
   try{ const r=await sb.auth.updateUser({password:pw}); return r; }catch(e){ return {error:{message:String(e.message||e)}}; } }
  async function deleteRow(hash){ if(!sb||!user) return;
   await sb.from("transactions").delete().eq("user_id",user.id).eq("hash",hash); }
+ function lastErrText(){ return lastErr; }
  function lastSync(){ if(lastErr) return "error: "+lastErr;
   return lastSyncAt? "synced "+lastSyncAt.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}) : "connected"; }
  async function deleteCloud(){ if(!sb||!user) return;
@@ -129,7 +130,12 @@ const Sync = (() => {
  async function replaceCloud(){ if(!sb||!user) return; await deleteCloud(); await push(); }
  async function push(){
   if(!sb||!user) return;
-  const rows=Store.load().map(r=>({user_id:user.id, hash:r[5]||Store.hash(r), d:r[0], descr:r[1], amount:r[2], cat:r[3]||"", remark:r[4]||""}));
+  /* Postgres rejects a batch that touches the same (user_id,hash) twice
+     ("ON CONFLICT DO UPDATE command cannot affect row a second time"), so collapse first. */
+  const byKey=new Map();
+  Store.load().forEach(r=>{ const h=r[5]||Store.hash(r);
+   byKey.set(h,{user_id:user.id, hash:h, d:r[0], descr:r[1], amount:r[2], cat:r[3]||"", remark:r[4]||""}); });
+  const rows=[...byKey.values()];
   for(let i=0;i<rows.length;i+=500){
    const {error}=await sb.from("transactions").upsert(rows.slice(i,i+500),{onConflict:"user_id,hash"});
    if(error){ lastErr=error.message; console.warn("push",error.message); return; }
@@ -167,5 +173,5 @@ const Sync = (() => {
    if(navigator.onLine===false){ lastErr="offline — will retry"; return; } push(); },4000); }
  window.addEventListener("online",()=>{ if(sb&&user){ lastErr=null; push(); } });
  function openSheetSafe(){ const sh=$$("authSheet"); if(sh) openSheet(); else alert("Sign-in is not available in this deployment."); }
- return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,deleteRow,lastSync,openSheet:openSheetSafe,user:()=>user,status};
+ return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,deleteRow,lastSync,lastErrText,openSheet:openSheetSafe,user:()=>user,status};
 })();

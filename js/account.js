@@ -48,10 +48,11 @@ const Account = (() => {
 
   $$("acProfile").innerHTML = u
    ? `<div class="acli"><span>Signed in as</span><b>${esc(u.email||"")}</b></div>
-      <div class="acli"><span>Sync</span><b style="color:var(--leaf)" id="acSyncState">${Sync.lastSync()||"active"}</b></div>
+      <div class="acli"><span>Sync</span><b style="color:${Sync.lastErrText&&Sync.lastErrText()?"var(--coral)":"var(--leaf)"}" id="acSyncState">${esc(Sync.lastSync()||"active")}</b></div>
       <div class="acli"><span>Transactions stored</span><b>${rows.length}</b></div>
       ${first?`<div class="acli"><span>Record covers</span><b>${monthLabel(first)} → ${monthLabel(last)}</b></div>`:""}
-      <button class="bigbtn ghost" id="acSyncNow" style="margin-top:10px">Sync now</button>`
+      <button class="bigbtn ghost" id="acSyncNow" style="margin-top:10px">Sync now</button>
+      <button class="bigbtn ghost" id="acFixDupes" style="margin-top:8px">Repair duplicates &amp; re-sync</button>`
    : `<div class="sub">You are in <b>local mode</b> — data lives only in this browser and is lost if you clear site data.</div>
       ${enabled?`<button class="bigbtn" id="acSignin" style="margin-top:10px">Sign in / create account</button>`
                :`<div class="sub" style="margin-top:8px">Cloud backup is not configured in this deployment (see README → Supabase).</div>`}
@@ -100,6 +101,17 @@ const Account = (() => {
    $$("acPwGo").addEventListener("click",changePw);
    $$("acSignout").addEventListener("click",()=>Sync.signOutAsk());
    $$("acSyncNow").addEventListener("click",async()=>{ $$("acSyncState").textContent="syncing…"; await Sync.pull(); await Sync.push(); render(); });
+   $$("acFixDupes").addEventListener("click",async()=>{
+    const n=Store.dedupe();
+    RAW=Store.txns(); M=RAW.length?build(RAW):null;
+    $$("acSyncState").textContent="repairing…";
+    await Sync.deleteCloud(); await Sync.push();
+    if(M) renderAll();
+    if(typeof History!=="undefined") History.refresh();
+    render();
+    alert(n? n+" duplicate row"+(n===1?"":"s")+" collapsed, and the cloud copy was rewritten from this device."
+           : "No duplicates found. The cloud copy was rewritten from this device.");
+   });
   } else if($$("acSignin")) $$("acSignin").addEventListener("click",()=>Sync.openSheet());
  }
  async function changePw(){
