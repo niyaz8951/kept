@@ -98,6 +98,19 @@ Sync never destroys local work: signing in on a device that already has data see
 empty cloud from that device and merges when both sides have rows. Budgets, profile
 and the path baseline sync the moment they change.
 
+## 4c · App lock (recommended)
+
+Account → Security → **App lock**. Set a PIN and Kept asks for it at launch, after
+inactivity (1–30 minutes, your choice) and when you leave the app. While locked, your
+transactions are not merely hidden: they are encrypted on the device with AES-256-GCM
+under a key derived from the PIN (PBKDF2-SHA256, 250k iterations), and the readable copy
+is deleted from browser storage — so they cannot be read even from developer tools.
+Kept also blurs itself in the app switcher.
+
+Forgetting the PIN means the local copy is unrecoverable by design. Recovery is by signing
+in to sync (the cloud copy is untouched) or re-uploading your Excel. Note the lock needs a
+secure page: GitHub Pages is https, so this works — a file:// copy will not encrypt.
+
 ## 5 · Privacy model
 
 Local mode keeps everything in `localStorage` on your device — clearing site data erases

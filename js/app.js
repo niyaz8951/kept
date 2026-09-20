@@ -107,9 +107,7 @@ function updateBanner(){
  }
  b.innerHTML=txt; b.className="banner on "+st.cls;
 }
-(function boot(){
- try{ const t=localStorage.getItem("kept_theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
- CUR=Store.meta("cur","AED");
+function startApp(){
  RAW=Store.txns();
  const safe=(name,fn)=>{ try{ fn(); }catch(err){ console.error("Kept: "+name+" failed",err); } };
  safe("Dedupe",()=>{ const n=Store.dedupe(); if(n) console.info("Kept: collapsed "+n+" duplicate rows"); });
@@ -128,5 +126,15 @@ function updateBanner(){
   updateBanner();
  }
  if(typeof Sync!=="undefined") Promise.resolve().then(()=>Sync.init()).catch(err=>console.error("Kept: Sync failed",err));
+}
+(function boot(){
+ try{ const t=localStorage.getItem("kept_theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+ CUR=Store.meta("cur","AED");
+ RAW=Store.txns();
  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+ Lock.init();
+ /* If a PIN is set, the store is encrypted and nothing renders until it is entered.
+    Lock.boot() returns false in that case; the unlock handler starts the app itself. */
+ Promise.resolve(Lock.boot()).then(open=>{ if(open!==false) startApp(); })
+  .catch(err=>{ console.error("Kept: lock failed",err); startApp(); });
 })();

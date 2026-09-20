@@ -75,14 +75,32 @@ const Account = (() => {
     <button class="bigbtn ghost" id="acSample">📄 Download sample Excel (format guide)</button>
     <div class="sub" style="margin-top:8px">Export is your backup and is re-uploadable. Daily entries are included, so the export is always the complete record.</div>`;
 
-  $$("acSecurity").innerHTML = u
+  const lockOn=Lock.isOn();
+  const lockUI=`<div style="border-top:1px solid var(--line);margin:14px 0 0;padding-top:14px">
+     <b style="font-size:14px">App lock</b>
+     <div class="sub" style="margin:4px 0 8px">${lockOn
+       ? "On. Kept asks for your PIN at launch, after inactivity and when you leave the app — and while locked your transactions are encrypted on this device, so they cannot be read even from browser storage."
+       : "Off. Anyone who picks up this device can open Kept and read everything. A PIN encrypts your transactions on this device and asks for it at launch."}</div>
+     ${lockOn ? `
+      <div class="acli"><span>Auto-lock after</span><select class="inp" id="acLockIdle" style="max-width:130px">
+        ${[1,2,5,10,30,0].map(m=>`<option value="${m}" ${Number(Store.meta("lockIdle",5))===m?"selected":""}>${m?m+" min":"never"}</option>`).join("")}</select></div>
+      <div class="acli"><span>Lock when I leave the app</span><input type="checkbox" id="acLockLeave" ${Store.meta("lockOnLeave",true)?"checked":""} style="width:22px;height:22px"></div>
+      <button class="bigbtn" id="acLockNow" style="margin-top:8px">Lock now</button>
+      <input class="inp" id="acPinOff" type="password" inputmode="numeric" placeholder="PIN, to turn the lock off" style="width:100%;margin:10px 0 8px">
+      <button class="bigbtn ghost" id="acLockOff">Turn app lock off</button>`
+      : `
+      <input class="inp" id="acPin1" type="password" inputmode="numeric" placeholder="new PIN (4+ digits)" style="width:100%;margin:0 0 8px">
+      <input class="inp" id="acPin2" type="password" inputmode="numeric" placeholder="repeat PIN" style="width:100%;margin:0 0 8px">
+      <button class="bigbtn" id="acLockOn">Turn app lock on</button>`}
+     <div class="authmsg" id="acLockMsg"></div></div>`;
+  $$("acSecurity").innerHTML = (u
    ? `<b style="font-size:14px">Change password</b>
       <input class="inp" id="acPw1" type="password" autocomplete="new-password" placeholder="new password (min 8)" style="width:100%;margin:8px 0">
       <input class="inp" id="acPw2" type="password" autocomplete="new-password" placeholder="repeat new password" style="width:100%;margin:0 0 8px">
       <div class="authmsg" id="acMsg"></div>
       <button class="bigbtn" id="acPwGo">Update password</button>
       <button class="bigbtn ghost" id="acSignout" style="margin-top:8px">Sign out</button>`
-   : `<div class="sub">Sign in to set a password, back up your record and use Kept on more than one device. Your rows are private to your login (row-level security) — nobody else, including the site owner, can read them.</div>`;
+   : `<div class="sub">Sign in to set a password, back up your record and use Kept on more than one device. Your rows are private to your login (row-level security) — nobody else, including the site owner, can read them.</div>`) + lockUI;
 
   $$("acDanger").innerHTML =
    `<div class="sub" style="margin-bottom:8px">Reset erases every transaction, budget, profile value and the path baseline${u?" — on this device and in your cloud copy":""}. Export first; this cannot be undone.</div>
@@ -113,6 +131,28 @@ const Account = (() => {
            : "No duplicates found. The cloud copy was rewritten from this device.");
    });
   } else if($$("acSignin")) $$("acSignin").addEventListener("click",()=>Sync.openSheet());
+  wireLock();
+ }
+ function wireLock(){
+  const m=$$("acLockMsg"), say=(t,cls)=>{ m.textContent=t; m.className="authmsg "+(cls||""); };
+  if($$("acLockOn")) $$("acLockOn").addEventListener("click",async()=>{
+   const p1=$$("acPin1").value, p2=$$("acPin2").value;
+   if(p1.length<4) return say("Use at least 4 digits.","err");
+   if(p1!==p2) return say("The two PINs do not match.","err");
+   say("Encrypting…");
+   const r=await Lock.enable(p1);
+   if(r.error) return say(r.error,"err");
+   say("App lock is on.","ok"); render();
+  });
+  if($$("acLockOff")) $$("acLockOff").addEventListener("click",async()=>{
+   say("Checking…");
+   const r=await Lock.disable($$("acPinOff").value);
+   if(r.error) return say(r.error,"err");
+   say("App lock is off.","ok"); render();
+  });
+  if($$("acLockNow")) $$("acLockNow").addEventListener("click",()=>Lock.lock());
+  if($$("acLockIdle")) $$("acLockIdle").addEventListener("change",e=>{ Store.setMeta("lockIdle",+e.target.value); Lock.resetIdle(); });
+  if($$("acLockLeave")) $$("acLockLeave").addEventListener("change",e=>Store.setMeta("lockOnLeave",e.target.checked));
  }
  async function changePw(){
   const p1=$$("acPw1").value,p2=$$("acPw2").value,m=$$("acMsg"); m.className="authmsg";

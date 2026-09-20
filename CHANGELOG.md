@@ -1,5 +1,40 @@
 # Kept — changelog
 
+## v12 — app lock with encryption at rest
+
+- **The "anyone can pick up my phone" problem.** Kept now offers a PIN lock in
+  Account → Security. It is not a cover screen: the PIN derives a key (PBKDF2-SHA256,
+  250,000 iterations) that encrypts the entire store with AES-256-GCM, and the plaintext
+  is removed from localStorage while locked — the vault holds no readable merchant, amount
+  or date. A wrong PIN fails the GCM authentication tag and reveals nothing.
+- Locks at launch, after an idle timeout you choose (1/2/5/10/30 minutes or never), and
+  when you leave the app (toggleable). "Lock now" is one tap.
+- The in-memory model is cleared on lock, and Kept blurs itself when backgrounded so the
+  figures do not show in the app switcher.
+- Turning the lock off requires the PIN and restores normal storage.
+- Honest limit, stated in the app and README: forget the PIN and the local copy is gone by
+  design — restore by signing in to sync or re-uploading the Excel. Requires an https page
+  (GitHub Pages qualifies).
+
+## v11 — the phone layout, properly
+
+- **Tab labels printed on top of each other.** v9 added a blanket `*{min-width:0}` to stop
+  sideways scrolling; it also let the items of the horizontally-scrolling tab strip shrink
+  to zero, so every label collapsed into the same spot. `min-width:0` is now scoped to the
+  containers that need it, and the children of any horizontal scroller (`nav.tabs`, tiles,
+  category chips, month chips) are pinned with `flex:0 0 auto`.
+- **Header takes one tight row** on phones — brand, Present, avatar — instead of wrapping
+  into a three-row block that pushed the content down.
+- **Room to breathe.** Hero heading and verdict resized for a narrow screen, line-height
+  raised to 1.6 for cards, insights, notes and the path banner, waffle gaps tightened,
+  legend allowed to wrap, and the spending-factor / leak / checklist rows given real
+  vertical padding.
+- **Sticky table headers turned off below 640px** — they were overlapping rows as you
+  scrolled inside a table.
+- Added a layout regression check that fails if a scrolling row's children can shrink, if
+  `min-width:0` is applied globally again, if sticky headers return on phones, or if the
+  header can wrap — the exact faults behind this and the previous screenshot.
+
 ## v10 — duplicates and the sync error
 
 - **"ON CONFLICT DO UPDATE command cannot affect row a second time".** Postgres refuses an

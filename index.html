@@ -10,10 +10,21 @@
 <link rel="stylesheet" href="css/app.css">
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<div id="lockScreen" role="dialog" aria-modal="true" aria-label="Kept is locked">
+ <div class="lockbox">
+  <div class="brand" style="justify-content:center">kept<span class="kdot">.</span></div>
+  <p class="sub" style="margin:10px 0 16px">Locked. Enter your PIN to open your money.</p>
+  <input class="inp" id="lockPin" type="password" inputmode="numeric" autocomplete="off"
+   enterkeyhint="go" placeholder="PIN" aria-label="PIN" style="width:100%;height:54px;font-size:22px;text-align:center;letter-spacing:6px">
+  <div class="authmsg" id="lockMsg" role="alert" aria-live="assertive"></div>
+  <button class="bigbtn" id="lockGo">Unlock</button>
+  <p class="sub" style="margin-top:14px;font-size:12px">Your transactions are encrypted on this device while Kept is locked. Forgetting the PIN means the local copy cannot be recovered — it can be restored by signing in to sync, or by re-uploading your Excel.</p>
+ </div>
+</div>
 <div class="appwrap">
 <header>
  <div class="hrow">
-  <div class="brand">kept<span class="kdot">.</span><small>how much of your money stays yours <span class="ver" id="verTag">v10</span></small></div>
+  <div class="brand">kept<span class="kdot">.</span><small>how much of your money stays yours <span class="ver" id="verTag">v12</span></small></div>
   <div class="spacer"></div>
   <button class="btn primary" id="presBtn" title="Present the review">Present</button>
   <button class="avatar" id="acctBtn" title="Account and settings" aria-label="Account and settings"><span id="avInit" aria-hidden="true">?</span></button>
@@ -399,6 +410,7 @@
 <script src="vendor/xlsx.full.min.js"></script>
 <script src="vendor/chart.umd.js"></script>
 <script src="js/store.js"></script>
+<script src="js/lock.js"></script>
 <script src="js/core.js"></script>
 <script src="js/render.js"></script>
 <script src="js/render2.js"></script>
