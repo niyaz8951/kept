@@ -20,7 +20,7 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
- font-family:"Archivo","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+ font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
  -webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.015em}
 button{font-family:inherit;cursor:pointer}
@@ -329,3 +329,57 @@ nav.tabs button{white-space:nowrap}
 .syncbadge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;background:var(--line2);color:var(--grey);cursor:pointer}
 .syncbadge.on{background:color-mix(in srgb,var(--leaf) 18%,transparent);color:var(--leaf)}
 @media (min-width:900px){ .bottomnav{display:none} .appwrap{padding-bottom:0} }
+
+/* ---------- avatar + slim header ---------- */
+.avatar{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);
+ color:#fff;font:inherit;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.avatar:hover{background:rgba(255,255,255,.22)}
+/* ---------- transaction history ---------- */
+.txlist{margin-top:6px}
+.txday{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);
+ padding:14px 2px 6px;position:sticky;top:0;background:var(--card);z-index:1}
+.txrow{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--line2)}
+.txicon{flex:0 0 36px;width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.txmid{flex:1;min-width:0}
+.txname{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.txmeta{font-size:11.5px;color:var(--grey);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.txkind{text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.txamt{font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.txamt.pos{color:var(--leaf)}
+.txdel{background:none;border:none;color:var(--line);font-size:14px;cursor:pointer;padding:4px 2px}
+.txrow:hover .txdel{color:var(--coral)}
+/* ---------- account rows ---------- */
+.acli{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+.acli span{color:var(--ink2)}
+.acli b{font-variant-numeric:tabular-nums}
+.filebtn{position:relative;overflow:hidden;cursor:pointer}
+.filebtn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* ---------- one-tap repeat tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{display:flex;align-items:center;gap:9px;padding:10px;min-height:56px;border:1px solid var(--line);
+ border-radius:12px;background:var(--card);cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.tile:hover,.tile:active{border-color:var(--leaf);background:var(--line2)}
+.tile .tl{min-width:0;display:flex;flex-direction:column}
+.tile .tl b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .tl i{font-style:normal;font-size:11.5px;color:var(--grey)}
+/* ---------- live month envelopes ---------- */
+.envrow{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.envname{flex:0 0 32%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+.envtrack{flex:1;height:12px;background:var(--line2);border-radius:6px;overflow:hidden}
+.envtrack i{display:block;height:100%;border-radius:6px}
+.envval{flex:0 0 27%;text-align:right;font-weight:700}
+.envval small{color:var(--grey);font-weight:500}
+/* ---------- accessibility: visible focus, comfortable targets ---------- */
+:focus-visible{outline:3px solid var(--leaf);outline-offset:2px;border-radius:6px}
+header :focus-visible{outline-color:#9DE8C4}
+.btn,.bigbtn,.catchip,.mchip,.dfchip,.tile,.avatar,nav.tabs button{min-height:44px}
+.catchip,.mchip{padding:11px 16px;font-size:13.5px}
+nav.tabs button{padding:12px 14px}
+.bottomnav button{min-height:52px;padding:7px 2px 6px}
+.txdel{min-width:44px;min-height:44px;color:var(--grey)}
+.sub{color:var(--ink2)}                 /* AA: 5.9:1 on card vs the old grey 3.4:1 */
+.txmeta,.mcard .md,.tile .tl i{color:var(--ink2)}
+.skip{position:absolute;left:-9999px;top:auto}
+.skip:focus{left:8px;top:8px;z-index:400;background:var(--card);color:var(--ink);padding:10px 14px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}

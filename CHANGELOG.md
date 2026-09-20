@@ -1,0 +1,57 @@
+# Kept — changelog
+
+## v4 — review pass (gap review, mobile accessibility, competitive comparison)
+
+### (a) Fixed
+
+- **Deleted transactions came back.** `Store.merge()` had no tombstones, so any row
+  deleted locally was re-added by the next `Sync.pull()`. Deletes are now recorded in
+  `kept_tomb`, merge refuses resurrected hashes, and `push()` deletes those rows
+  server-side. Cleared on a fresh upload.
+- **Offline writes were silently lost.** `queuePush()` fired regardless of connectivity
+  and swallowed errors. It now checks `navigator.onLine`, records the failure in the
+  Account panel, and retries automatically on the `online` event.
+- **Dishonest numbers on thin data.** One month of history produced confident averages,
+  and zero detected income produced a 0% keep-rate that looked like a verdict. The hero
+  now carries a data-sufficiency note: one/two months flagged as "not yet a pattern",
+  missing income rows explained (with the fix), and the running partial month named as
+  excluded from averages.
+- **Blank screens with no data.** Analysis-only tabs rendered empty. Each now shows an
+  empty state with two buttons: log an expense, or upload the Excel. Original markup is
+  cached and restored when data arrives.
+- **Accessibility.** Added: skip link, `<main>` landmark, `role=tablist`/`tab`/
+  `tabpanel` with `aria-selected`, `hidden` on inactive panes, `aria-current` in the
+  bottom nav, `aria-live="polite"` on the path banner, `role=alert` on auth messages,
+  `aria-label`s on icon-only controls and filters, `<label for>` on every form input.
+- **Tap targets and contrast.** 44px minimum on every button, chip and tab (52px in the
+  bottom nav, 52px amount field); `.sub` and secondary text moved from `--grey`
+  (~3.4:1, below AA) to `--ink2` (~5.9:1 on card); `:focus-visible` ring everywhere;
+  `prefers-reduced-motion` honoured.
+- **Mobile keyboards.** Amount field is `inputmode="decimal"` with `step`/`min`, text
+  fields carry `enterkeyhint="done"`.
+
+### (b) Added from the competitive review
+
+- **One-tap repeat tiles** (Add tab) — the pattern behind Wallet/Money Manager's speed.
+  Merchants seen three or more times become buttons pre-filled with your usual amount
+  and category: logging a repeat expense is two taps, not eight. This is the single
+  change most likely to make the owner log something today.
+- **"This month, so far" on Home** — YNAB's envelope burn-down, kept honest. Out/in/kept
+  to date against a pro-rata pace, the six tightest envelopes as bars, and one specific
+  instruction ("freeze X for the rest of the month"). Everything else in Kept explains
+  the past; this is the only panel that can still change the current month.
+
+### (c) Deliberately not done
+
+- **Bank aggregation (Plaid/SaltEdge, à la Monarch/Copilot/Emma).** Needs a paid server
+  and hands transaction data to a third party — it contradicts the no-server, privacy-first
+  constraint. The SMS-paste parser already covers same-day capture.
+- **Multi-account balances and reconciliation (Firefly III, Actual Budget).** Real
+  double-entry accounting is a large surface that improves bookkeeping accuracy, not
+  behaviour. Kept's thesis is the keep-rate, not a balanced ledger.
+- **Goals/savings-buckets UI (Monarch, Emma).** The Life plan already states the only
+  goals that matter in money and years; buckets would add screens without adding pressure.
+- **Push notifications and streaks.** Would need a server and permission prompts, and
+  gamified streaks reward opening the app rather than cutting spending.
+- **CSV import mapping wizard.** The auto-mapper plus the sample file covers the
+  formats seen so far; a wizard is onboarding polish, not a spending decision.

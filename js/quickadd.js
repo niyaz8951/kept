@@ -4,6 +4,31 @@ const QuickAdd = (() => {
  const CATS=["Food","Grocery","Transport","Shopping","Utilities","Car","Medicine","Entertainment","Personal","Rent","Loan","Misc","Income"];
  let cat="Food";
  function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+ /* frequent merchants become one-tap tiles: 2 taps to log a repeat expense */
+ function frequent(){
+  const rows=Store.load().filter(r=>r[2]<0);
+  const map={};
+  rows.slice(-400).forEach(r=>{ const k=String(r[1]).trim().slice(0,28).toUpperCase(); if(!k) return;
+   (map[k]=map[k]||{n:0,sum:0,cat:r[3]||"Misc",label:String(r[1]).trim().slice(0,28)});
+   map[k].n++; map[k].sum+=-r[2]; });
+  return Object.values(map).filter(v=>v.n>=3)
+   .sort((a,b)=>b.n-a.n).slice(0,6)
+   .map(v=>({label:v.label, cat:v.cat, amt:Math.round(v.sum/v.n)}));
+ }
+ function renderTiles(){
+  const f=frequent();
+  $$("qaTiles").innerHTML = f.length
+   ? `<div class="sub" style="margin-bottom:6px">Tap to log again — amount is your usual, edit it above if different.</div>`
+     + f.map((v,i)=>`<button class="tile" data-i="${i}">${Icons.chip(v.label,v.cat,"expense")}
+        <span class="tl"><b>${esc(v.label)}</b><i>${money(v.amt)} · ${esc(v.cat)}</i></span></button>`).join("")
+   : `<div class="sub">Your regular merchants appear here as one-tap buttons once they repeat.</div>`;
+  $$("qaTiles").querySelectorAll(".tile").forEach(b=>b.addEventListener("click",()=>{
+   const v=f[+b.dataset.i], amt=parseFloat($$("qaAmt").value)||v.amt;
+   const res=Store.merge([[todayISO(), v.label, -Math.abs(amt), v.cat, "quick-tile"]]);
+   $$("qaAmt").value="";
+   afterWrite(res, `−${fmt0(amt)} ${v.label}`);
+  }));
+ }
  function init(){
   $$("qaDate").value=todayISO();
   $$("qaCats").innerHTML=CATS.map(c=>`<span class="catchip ${c===cat?"on":""}" data-c="${c}">${c}</span>`).join("");
@@ -11,7 +36,7 @@ const QuickAdd = (() => {
    cat=ch.dataset.c; $$("qaCats").querySelectorAll(".catchip").forEach(x=>x.classList.toggle("on",x.dataset.c===cat)); });
   $$("qaSave").addEventListener("click",saveManual);
   $$("qaParse").addEventListener("click",parsePaste);
-  renderRecent();
+  renderRecent(); renderTiles();
  }
  function saveManual(){
   const amt=parseFloat($$("qaAmt").value), desc=($$("qaDesc").value||"").trim()||cat, date=$$("qaDate").value||todayISO();
@@ -60,9 +85,10 @@ const QuickAdd = (() => {
  }
  function afterWrite(res, label){
   RAW=Store.txns(); M=RAW.length?build(RAW):null;
-  renderRecent(); if(typeof renderAll==="function"&&M) renderAll();
+  renderRecent(); renderTiles(); if(typeof History!=="undefined"&&document.getElementById("hxList")) History.refresh();
+  if(typeof renderAll==="function"&&M) renderAll();
   if(typeof Sync!=="undefined") Sync.queuePush();
-  $$("qaMsg").innerHTML=`<div class="insight">${res.added?`Saved: <b>${label}</b>`:`Already recorded (duplicate skipped)`} · ${res.total} transactions on record.<span class="act">${pathLine()}</span></div>`;
+  $$("qaMsg").innerHTML=`<div class="insight" role="status">${res.added?`Saved: <b>${label}</b>`:`Already recorded (duplicate skipped)`} · ${res.total} transactions on record.<span class="act">${pathLine()}</span></div>`;
  }
  function pathLine(){
   if(!M) return "upload history to activate the path check.";

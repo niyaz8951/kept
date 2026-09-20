@@ -1,28 +1,27 @@
 "use strict";
-/* =============== ACCOUNT — settings, password, export, reset, sample file =============== */
+/* =============== ACCOUNT — profile, settings, data, security, danger zone =============== */
 const Account = (() => {
  function monthLabel(iso){ const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString("en-GB",{month:"short"})+"-"+String(d.getFullYear()).slice(2); }
- function toAOA(rows){ // exact upload format
+ function toAOA(rows){
   return [["Month","Date","Expense","Amount","Category","Remarks"]]
    .concat(rows.map(r=>[monthLabel(r[0]), r[0], r[1], r[2], r[3]||"", r[4]||""]));
  }
- function download(aoa, name){
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
+ function download(aoa,name){
+  const wb=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"]=[{wch:8},{wch:12},{wch:34},{wch:10},{wch:12},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, ws, "Expense History");
-  XLSX.writeFile(wb, name);
+  XLSX.utils.book_append_sheet(wb,ws,"Expense History");
+  XLSX.writeFile(wb,name);
  }
  function exportAll(){
   const rows=Store.load();
   if(!rows.length){ alert("Nothing to export yet."); return; }
-  download(toAOA(rows), "Kept_Export_"+new Date().toISOString().slice(0,10)+".xlsx");
+  download(toAOA(rows),"Kept_Export_"+new Date().toISOString().slice(0,10)+".xlsx");
  }
- function sample(){ // fictional data only — never the user's
+ function sample(){
   const y=new Date().getFullYear(), m=String(new Date().getMonth()+1).padStart(2,"0");
   const mm=d=>`${y}-${m}-${String(d).padStart(2,"0")}`;
-  const rows=[
+  download(toAOA([
    [mm(1),"SALARY — ACME ENGINEERING",9500,"Income",""],
    [mm(2),"CASHBACK REWARD",45,"Income","refund"],
    [mm(3),"GREENVIEW RESIDENCES RENT",-3000,"Rent",""],
@@ -33,45 +32,79 @@ const Account = (() => {
    [mm(8),"NOON ORDER — HEADPHONES",-260,"Shopping",""],
    [mm(9),"ELECTRICITY & WATER",-310,"Utilities",""],
    [mm(10),"PHARMACY PLUS",-65,"Medicine",""],
+   [mm(11),"PETROL — CITY FUEL",-170,"Car",""],
    [mm(12),"FAMILY DINNER — AL NOOR RESTAURANT",-180,"Food","weekend"],
    [mm(14),"INDEX FUND SIP",-500,"Investment","monthly"],
-   [mm(15),"CAR FUEL",-160,"Car",""],
    [mm(18),"CINEMA TICKETS",-90,"Entertainment",""],
    [mm(21),"CITY HYPERMARKET",-380,"Grocery",""],
    [mm(25),"MOBILE PLAN",-99,"Utilities",""],
-  ];
-  download(toAOA(rows), "Kept_Sample.xlsx");
+  ]),"Kept_Sample.xlsx");
  }
- function open(){
-  const signed = (typeof Sync!=="undefined") && Sync.user && Sync.user();
-  $$("acctBody").innerHTML =
-   (signed? `<div class="sub" style="margin-bottom:10px">Signed in as <b>${esc(signed.email||"")}</b> — every entry and setting is saved to your private Supabase rows.</div>`
-          : `<div class="sub" style="margin-bottom:10px">Local mode — data lives only in this browser. ${ (typeof Sync!=="undefined"&&Sync.enabled&&Sync.enabled())?'Sign in from the header badge to back it up.':'Configure Supabase (see README) to enable login + backup.'}</div>`)
-   +`<button class="bigbtn ghost" id="acExport" style="margin-bottom:8px">⬇ Export all data (Excel, upload format)</button>
-     <button class="bigbtn ghost" id="acSample" style="margin-bottom:8px">📄 Download sample Excel (format guide)</button>`
-   +(signed? `<div style="border-top:1px solid var(--line);margin:12px 0;padding-top:12px"><b style="font-size:14px">Change password</b>
-      <div class="pwrow"><input class="inp" id="acPw1" type="password" autocomplete="new-password" placeholder="new password (min 8)" style="width:100%;margin:8px 0"></div>
+ function signedUser(){ return (typeof Sync!=="undefined"&&Sync.user)?Sync.user():null; }
+ function render(){
+  const u=signedUser(), rows=Store.load(), enabled=(typeof Sync!=="undefined"&&Sync.enabled&&Sync.enabled());
+  const first=rows.length?rows[0][0]:null, last=rows.length?rows[rows.length-1][0]:null;
+  $$("avInit").textContent=u?(u.email||"?")[0].toUpperCase():"?";
+
+  $$("acProfile").innerHTML = u
+   ? `<div class="acli"><span>Signed in as</span><b>${esc(u.email||"")}</b></div>
+      <div class="acli"><span>Sync</span><b style="color:var(--leaf)" id="acSyncState">${Sync.lastSync()||"active"}</b></div>
+      <div class="acli"><span>Transactions stored</span><b>${rows.length}</b></div>
+      ${first?`<div class="acli"><span>Record covers</span><b>${monthLabel(first)} → ${monthLabel(last)}</b></div>`:""}
+      <button class="bigbtn ghost" id="acSyncNow" style="margin-top:10px">Sync now</button>`
+   : `<div class="sub">You are in <b>local mode</b> — data lives only in this browser and is lost if you clear site data.</div>
+      ${enabled?`<button class="bigbtn" id="acSignin" style="margin-top:10px">Sign in / create account</button>`
+               :`<div class="sub" style="margin-top:8px">Cloud backup is not configured in this deployment (see README → Supabase).</div>`}
+      <div class="acli" style="margin-top:10px"><span>Transactions stored</span><b>${rows.length}</b></div>`;
+
+  $$("acSettings").innerHTML =
+   `<div class="acli"><span>Currency</span><select class="inp" id="acCur">
+      ${["AED","SAR","INR","USD"].map(c=>`<option value="${c}" ${c===CUR?"selected":""}>${c}</option>`).join("")}</select></div>
+    <div class="acli"><span>Appearance</span><select class="inp" id="acTheme">
+      <option value="light">Light</option><option value="dark">Dark</option></select></div>
+    <div class="acli"><span>Target keep-rate</span><input class="inp" id="acTarget" type="number" min="5" max="60" value="${Life.prof().targetRate}" style="width:90px"></div>
+    <div class="acli"><span>Ramp to target (months)</span><input class="inp" id="acRamp" type="number" min="1" max="36" value="${Life.prof().rampMonths}" style="width:90px"></div>
+    <div class="sub" style="margin-top:8px">The path banner scores every month against this ramp.</div>`;
+  $$("acTheme").value=document.documentElement.dataset.theme||"light";
+
+  $$("acData").innerHTML =
+   `<label class="bigbtn ghost filebtn" style="display:block;text-align:center;margin-bottom:8px">⬆ Upload expense Excel (restarts record)
+     <input type="file" id="acFile" accept=".xlsx,.xls,.csv"></label>
+    <button class="bigbtn ghost" id="acExport" style="margin-bottom:8px">⬇ Export everything (Excel, upload format)</button>
+    <button class="bigbtn ghost" id="acSample">📄 Download sample Excel (format guide)</button>
+    <div class="sub" style="margin-top:8px">Export is your backup and is re-uploadable. Daily entries are included, so the export is always the complete record.</div>`;
+
+  $$("acSecurity").innerHTML = u
+   ? `<b style="font-size:14px">Change password</b>
+      <input class="inp" id="acPw1" type="password" autocomplete="new-password" placeholder="new password (min 8)" style="width:100%;margin:8px 0">
       <input class="inp" id="acPw2" type="password" autocomplete="new-password" placeholder="repeat new password" style="width:100%;margin:0 0 8px">
       <div class="authmsg" id="acMsg"></div>
-      <button class="bigbtn" id="acPwGo">Update password</button></div>`
-    : ``)
-   +`<div style="border-top:1px solid var(--line);margin:12px 0;padding-top:12px"><b style="font-size:14px;color:var(--coral)">Danger zone</b>
-     <div class="sub" style="margin:6px 0">Reset wipes every transaction, budget, profile and path baseline${signed?" — locally and in your cloud copy":""}. Export first.</div>
-     <button class="bigbtn ghost" id="acReset" style="color:var(--coral);border-color:var(--coral)">Reset everything</button></div>`
-   +(signed? `<button class="bigbtn ghost" id="acSignout" style="margin-top:8px">Sign out</button>`:``);
+      <button class="bigbtn" id="acPwGo">Update password</button>
+      <button class="bigbtn ghost" id="acSignout" style="margin-top:8px">Sign out</button>`
+   : `<div class="sub">Sign in to set a password, back up your record and use Kept on more than one device. Your rows are private to your login (row-level security) — nobody else, including the site owner, can read them.</div>`;
+
+  $$("acDanger").innerHTML =
+   `<div class="sub" style="margin-bottom:8px">Reset erases every transaction, budget, profile value and the path baseline${u?" — on this device and in your cloud copy":""}. Export first; this cannot be undone.</div>
+    <button class="bigbtn ghost" id="acReset" style="color:var(--coral);border-color:var(--coral)">Reset everything</button>`;
+
+  // wiring
   $$("acExport").addEventListener("click",exportAll);
   $$("acSample").addEventListener("click",sample);
-  if(signed){
+  $$("acReset").addEventListener("click",resetAll);
+  $$("acFile").addEventListener("change",e=>handleUpload(e));
+  $$("acCur").addEventListener("change",e=>{ CUR=e.target.value; Store.setMeta("cur",CUR); renderAll(); });
+  $$("acTheme").addEventListener("change",e=>{ setTheme(e.target.value); });
+  $$("acTarget").addEventListener("change",e=>{ const p=Life.prof(); p.targetRate=+e.target.value||20; Store.setMeta("profile",p); renderAll(); });
+  $$("acRamp").addEventListener("change",e=>{ const p=Life.prof(); p.rampMonths=+e.target.value||6; Store.setMeta("profile",p); renderAll(); });
+  if(u){
    $$("acPwGo").addEventListener("click",changePw);
    $$("acSignout").addEventListener("click",()=>Sync.signOutAsk());
-  }
-  $$("acReset").addEventListener("click",resetAll);
-  $$("acctSheet").classList.add("on");
+   $$("acSyncNow").addEventListener("click",async()=>{ $$("acSyncState").textContent="syncing…"; await Sync.pull(); await Sync.push(); render(); });
+  } else if($$("acSignin")) $$("acSignin").addEventListener("click",()=>Sync.openSheet());
  }
  async function changePw(){
-  const p1=$$("acPw1").value, p2=$$("acPw2").value, m=$$("acMsg");
-  m.className="authmsg";
-  if(p1.length<8){ m.textContent="New password must be at least 8 characters."; m.classList.add("err"); return; }
+  const p1=$$("acPw1").value,p2=$$("acPw2").value,m=$$("acMsg"); m.className="authmsg";
+  if(p1.length<8){ m.textContent="At least 8 characters."; m.classList.add("err"); return; }
   if(p1!==p2){ m.textContent="The two passwords do not match."; m.classList.add("err"); return; }
   m.textContent="Updating…";
   const r=await Sync.updatePassword(p1);
@@ -79,11 +112,12 @@ const Account = (() => {
   else { m.textContent="Password updated."; m.classList.add("ok"); $$("acPw1").value=""; $$("acPw2").value=""; }
  }
  async function resetAll(){
-  if(!confirm("Reset EVERYTHING? All transactions, budgets, profile and the path baseline will be deleted"+((typeof Sync!=="undefined"&&Sync.user&&Sync.user())?" here AND in your cloud copy":"")+".")) return;
+  const u=signedUser();
+  if(!confirm("Reset EVERYTHING? All transactions, budgets, profile and the path baseline will be deleted"+(u?" here AND in your cloud copy":"")+".")) return;
   if(!confirm("Last check — have you exported? This cannot be undone.")) return;
-  if(typeof Sync!=="undefined"&&Sync.user&&Sync.user()) await Sync.deleteCloud();
+  if(u) await Sync.deleteCloud();
   try{ localStorage.removeItem("kept_tx"); localStorage.removeItem("kept_meta"); localStorage.removeItem("kept_budget"); }catch(e){}
   location.reload();
  }
- return {open, sample, exportAll, toAOA};
+ return {render, sample, exportAll, toAOA};
 })();

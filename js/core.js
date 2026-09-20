@@ -120,7 +120,8 @@ const DISCRET  = ["Food","Shopping","Entertainment","Electronics","Clothing","Ho
 /* =============== 3. MODEL =============== */
 function build(raw){
  const txns = raw.map(r=>{
-  const t = { d: r[0]?new Date(r[0]+"T00:00:00"):null, ds:r[0]||"", desc:r[1], amt:r[2], cat:r[3]||"Misc", rem:r[4]||"" };
+  const t = { d: r[0]?new Date(r[0]+"T00:00:00"):null, ds:r[0]||"", desc:r[1], amt:r[2], cat:r[3]||"Misc", rem:r[4]||"",
+              hash: (typeof Store!=="undefined"&&Store.hash)?Store.hash(r):"" };
   t.month = t.ds ? t.ds.slice(0,7) : "unknown";
   t.kind = classify(t);
   if(t.kind==="expense-misfiled"){ t.kind="expense"; t.misfiled=true; }

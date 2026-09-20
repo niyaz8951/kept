@@ -15,6 +15,16 @@ function catColor(i){ return CAT_COLORS[i % CAT_COLORS.length]; }
 function kpiCard(lb, vl, sb, cls){ return `<div class="kpi ${cls||""} an"><div class="lb">${lb}</div><div class="vl num">${vl}</div><div class="sb">${sb||""}</div></div>`; }
 function insight(html, action){ return `<div class="insight">${html}${action?`<span class="act">Do this: ${action}</span>`:""}</div>`; }
 
+function dataCaveat(){
+ if(!M) return "";
+ const n=M.fullMonths.length, inc=M.avg.income+M.avg.refund, out=[];
+ if(n===0) out.push("No complete month yet — every figure below is from a partial month and will move a lot.");
+ else if(n===1) out.push("Only <b>one</b> complete month on record: treat averages as a first reading, not a trend. Trends need three.");
+ else if(n===2) out.push("Two complete months on record — enough for a direction, not yet a pattern.");
+ if(inc<=0) out.push("No income rows detected, so the keep-rate cannot be computed. Add your salary rows (positive amounts) or map the income column on upload.");
+ if(M.lastPartial) out.push("The newest month is still running and is excluded from averages — its own progress is in the banner above.");
+ return out.length? `<div class="insight" role="note"><b>Read this first.</b> ${out.join(" ")}</div>` : "";
+}
 function renderHero(){
  const kept = Math.max(0, Math.min(100, Math.round(M.cashKeptRate)));
  const debt = Math.max(0, Math.min(100-kept, Math.round(M.debtBurden)));
@@ -22,6 +32,7 @@ function renderHero(){
  let cells="";
  for(let i=0;i<100;i++) cells += `<i class="${i<kept?"k":i<kept+debt?"d":"s"}"></i>`;
  $$("waffle").innerHTML = cells;
+ if($$("heroNote")) $$("heroNote").innerHTML=dataCaveat();
  const name = "Niyaz";
  const verdictTone = M.cashKeptRate>=20 ? "You are building." : M.cashKeptRate>=8 ? "You are treading water." : "The money is leaking faster than it grows.";
  $$("heroTitle").innerHTML = `For every ${CUR} 100 you earn, you keep <span style="color:#5FD8A4">${kept}</span>.`;
@@ -30,6 +41,35 @@ function renderHero(){
   + (M.totalBorrowed>0 ? `And <b>${money(M.totalBorrowed)}</b> of your inflow was borrowed, not earned.` : ``);
 }
 
+/* Live month: envelope burn-down per category + the one action for today */
+function renderThisMonth(){
+ const box=$$("thisMonth"); if(!box||!M) return;
+ const cur=M.months[M.months.length-1]; if(!cur){ box.innerHTML=""; return; }
+ const p=M.per[cur], day=Math.max(1,new Date().getDate()), left=Math.max(0,30.44-day);
+ const bud=(typeof budgetFor==="function")?budgetFor():{};
+ const rows=Object.entries(bud).map(([c,b])=>{
+  const spent=p.byCat[c]||0, share=b>0?spent/b*100:0;
+  return {c,b,spent,share,over:spent>b};
+ }).sort((a,b)=>b.share-a.share).slice(0,6);
+ const over=rows.filter(r=>r.over);
+ const outSoFar=p.spend+p.debtpay+p.invest, inSoFar=p.income+p.refund;
+ const pace=(M.avg.spend+M.avg.debtpay+M.avg.invest)*day/30.44;
+ const worst=rows[0];
+ box.innerHTML=`<div class="kpis" style="grid-template-columns:repeat(3,1fr)">`
+  +kpiCard("Out so far this month",money(outSoFar),`day ${day} · pace says ${money(Math.round(pace))}`, outSoFar<=pace?"ok":"bad")
+  +kpiCard("In so far",money(inSoFar),"salary, refunds","ok")
+  +kpiCard("Kept so far",money(inSoFar-outSoFar),`${left>0?Math.round(left)+" days left to protect it":"month closing"}`, inSoFar-outSoFar>=0?"ok":"bad")
+  +`</div>`
+  + rows.map(r=>`<div class="envrow"><span class="envname">${esc(r.c)}</span>
+     <span class="envtrack"><i style="width:${Math.min(100,r.share)}%;background:${r.over?"var(--coral)":r.share>80?"var(--amber)":"var(--leaf)"}"></i></span>
+     <span class="envval num">${fmt0(r.spent)}<small>/${fmt0(r.b)}</small></span></div>`).join("")
+  + insight(over.length
+     ? `<b>${over.length}</b> ${over.length===1?"envelope is":"envelopes are"} already over for ${monthShort(cur)}: ${over.map(o=>esc(o.c)+" by "+money(o.spent-o.b)).join(", ")}.`
+     : worst? `Tightest envelope: <b>${esc(worst.c)}</b> at ${pct(worst.share)} used with ${Math.round(left)} days to go.`
+            : `No budgets set yet — the CFO view proposes them from your own history in one tap.`,
+    over.length ? `freeze ${esc(over[0].c)} for the rest of ${monthShort(cur)}; every ${CUR} not spent there is kept.`
+                : `keep ${worst?esc(worst.c):"discretionary spend"} under its envelope for the remaining ${Math.round(left)} days.`);
+}
 function renderOverview(){
  const a = M.avg, cls=(v,g,w)=>v>=g?"ok":v>=w?"warn":"bad";
  const srCls = cls(M.cashKeptRate,20,10);
@@ -91,8 +131,8 @@ function renderOverview(){
   `Counting borrowed money as income hides the truth. Real position: earned <b>${money(grand)}</b>, all-in outflow <b>${money(M.totalSpend+M.totalDebtpay+M.totalInvest)}</b>, kept <b>${money(M.cumNet)}</b>. `+
   (M.totalBorrowed>M.totalInvest*5?`You borrowed <b>${fmt0(M.totalInvest?M.totalBorrowed/M.totalInvest:999)}×</b> more than you invested over this period.`:``),
   "from today, record loan disbursements in a 'Loan In' category, never 'Income'.");
+ renderThisMonth();
 }
-
 function renderSpending(){
  const sel = $$("spendPeriod");
  if(sel.options.length===1) M.months.slice().reverse().forEach(m=>{ const o=document.createElement("option"); o.value=m; o.textContent=m; sel.appendChild(o); });

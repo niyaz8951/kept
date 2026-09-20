@@ -3,7 +3,7 @@
 /* Runs only if config.js provides window.APP_CONFIG={SUPABASE_URL,SUPABASE_ANON_KEY}. Without it the
    app is fully local. Row Level Security keeps every user's rows private to their login. */
 const Sync = (() => {
- let sb=null, user=null, timer=null, mode="signin", busy=false;
+ let sb=null, user=null, timer=null, mode="signin", busy=false, lastSyncAt=null, lastErr=null;
 
  function rawCfg(){ return window.APP_CONFIG||{}; }
  /* Normalize + validate the project URL — the #1 setup mistake is pasting the dashboard URL
@@ -28,9 +28,9 @@ const Sync = (() => {
  function msg(t,cls){ const m=$$("authMsg"); m.textContent=t||""; m.className="authmsg "+(cls||""); }
 
  async function init(){
-  const badge=$$("syncBadge");
+  let badge=$$("syncBadge")||null;
   if(!enabled()){ badge.textContent="Local only"; badge.title="Add Supabase keys in config.js to enable login + sync";
-   badge.addEventListener("click",()=>Account.open()); return; }
+   badge=null; return; }
   const cu=cleanURL();
   if(cu.err){ badge.textContent="Sync misconfigured"; badge.title=cu.err;
    badge.addEventListener("click",()=>alert("Sync is not usable yet:\n\n"+cu.err)); return; }
@@ -41,7 +41,7 @@ const Sync = (() => {
   sb=window.supabase.createClient(cu.url,(rawCfg().SUPABASE_ANON_KEY||"").trim());
   const {data}=await sb.auth.getSession(); user=data.session?.user||null;
   paintBadge();
-  badge.addEventListener("click",()=>{ user? Account.open() : openSheet(); });
+  
   // form wiring
   $$("atSignin").addEventListener("click",()=>setMode("signin"));
   $$("atSignup").addEventListener("click",()=>setMode("signup"));
@@ -54,9 +54,8 @@ const Sync = (() => {
   if(cu.warn) console.warn(cu.warn);
   if(user) await pull();
  }
- function paintBadge(){ const b=$$("syncBadge");
-  b.classList.toggle("on",!!user);
-  b.textContent=user?"Synced · "+(user.email||"").split("@")[0]:"Sign in"; }
+ function paintBadge(){ const a=$$("avInit"); if(a) a.textContent=user?(user.email||"?")[0].toUpperCase():"?";
+  if(typeof Account!=="undefined"&&document.getElementById("acProfile")&&document.getElementById("acProfile").innerHTML) Account.render(); }
  function openSheet(){ setMode("signin"); msg(""); $$("authSheet").classList.add("on"); setTimeout(()=>$$("authEmail").focus(),50); }
  function setMode(m){ mode=m;
   $$("atSignin").classList.toggle("on",m==="signin");
@@ -103,6 +102,8 @@ const Sync = (() => {
    $$("authSheet").classList.remove("on");
    paintBadge();
    await pull(); await push();
+   if(typeof Account!=="undefined") Account.render();
+   if(typeof History!=="undefined"&&document.getElementById("hxList")) History.refresh();
   }catch(e){ msg(friendly(e),"err"); }
   finally{ busy=false; $$("authGo").disabled=false; }
  }
@@ -117,6 +118,10 @@ const Sync = (() => {
  function signOutAsk(){ if(confirm("Sign out? Data stays on this device.")) sb.auth.signOut().then(()=>location.reload()); }
  async function updatePassword(pw){ if(!sb||!user) return {error:{message:"Not signed in."}};
   try{ const r=await sb.auth.updateUser({password:pw}); return r; }catch(e){ return {error:{message:String(e.message||e)}}; } }
+ async function deleteRow(hash){ if(!sb||!user) return;
+  await sb.from("transactions").delete().eq("user_id",user.id).eq("hash",hash); }
+ function lastSync(){ if(lastErr) return "error: "+lastErr;
+  return lastSyncAt? "synced "+lastSyncAt.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}) : "connected"; }
  async function deleteCloud(){ if(!sb||!user) return;
   await sb.from("transactions").delete().eq("user_id",user.id);
   await sb.from("meta").delete().eq("user_id",user.id); }
@@ -126,8 +131,13 @@ const Sync = (() => {
   const rows=Store.load().map(r=>({user_id:user.id, hash:r[5]||Store.hash(r), d:r[0], descr:r[1], amount:r[2], cat:r[3]||"", remark:r[4]||""}));
   for(let i=0;i<rows.length;i+=500){
    const {error}=await sb.from("transactions").upsert(rows.slice(i,i+500),{onConflict:"user_id,hash"});
-   if(error){ console.warn("push",error.message); break; }
+   if(error){ lastErr=error.message; console.warn("push",error.message); return; }
   }
+  const dead=Store.tombs();
+  for(let i=0;i<dead.length;i+=200){
+   await sb.from("transactions").delete().eq("user_id",user.id).in("hash",dead.slice(i,i+200));
+  }
+  lastErr=null; lastSyncAt=new Date();
   await sb.from("meta").upsert([
    {user_id:user.id, k:"meta",   v:JSON.parse(localStorage.getItem("kept_meta")||"{}")},
    {user_id:user.id, k:"budget", v:JSON.parse(localStorage.getItem("kept_budget")||"{}")}
@@ -136,14 +146,21 @@ const Sync = (() => {
  async function pull(){
   if(!sb||!user) return;
   const {data,error}=await sb.from("transactions").select("d,descr,amount,cat,remark").eq("user_id",user.id).limit(50000);
-  if(error||!data) return;
+  if(error){ lastErr=error.message; return; }
+  if(!data) return;
+  /* Never let the cloud erase local work: an empty cloud is SEEDED from this device,
+     a populated cloud is MERGED in (duplicates collapse on the row hash). */
+  if(!data.length){ if(Store.load().length){ await push(); lastSyncAt=new Date(); } return; }
   const res=Store.merge(data.map(r=>[r.d,r.descr,r.amount,r.cat,r.remark]));
+  lastSyncAt=new Date();
   const mm=await sb.from("meta").select("k,v").eq("user_id",user.id);
   (mm.data||[]).forEach(row=>{ const key=row.k==="budget"?"kept_budget":"kept_meta";
    try{ const cur=JSON.parse(localStorage.getItem(key)||"{}");
     localStorage.setItem(key,JSON.stringify(Object.assign(row.v||{},cur))); }catch(e){} });
   if(res.added){ RAW=Store.txns(); M=RAW.length?build(RAW):null; if(M) renderAll(); }
  }
- function queuePush(){ if(!sb||!user) return; clearTimeout(timer); timer=setTimeout(push,4000); }
- return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,user:()=>user};
+ function queuePush(){ if(!sb||!user) return; clearTimeout(timer); timer=setTimeout(()=>{
+   if(navigator.onLine===false){ lastErr="offline — will retry"; return; } push(); },4000); }
+ window.addEventListener("online",()=>{ if(sb&&user){ lastErr=null; push(); } });
+ return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,deleteRow,lastSync,openSheet,user:()=>user};
 })();

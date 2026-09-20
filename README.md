@@ -76,15 +76,27 @@ Since you own `thinkneering.com`: in the repo create a file `CNAME` containing
   coverage per child, and the compounded cost of every undisciplined year — all in
   today's money.
 
-## 4b · Account (after sign-in)
+## 4a · Screens
 
-Tap the header badge: **Account & data** shows your email and gives you
-change-password (asked twice), **Export all data** as an Excel in the exact upload
-format (your backup and your portability), **Download sample Excel**, sign out, and a
-**Reset everything** danger zone that wipes local *and* cloud data after two
-confirmations. In local mode the same sheet offers export, sample and reset.
-Every setting — budgets, profile, path baseline — syncs to your Supabase rows the
-moment it changes, so a lost phone loses nothing.
+Bottom navigation on mobile: **Home · Add · History · Analysis · Account**
+(the full set of analysis tabs stays in the scrolling top nav on every device).
+**History** is the continuous record: every uploaded and daily transaction, grouped
+by day with a category icon per row, searchable and filterable by month and kind,
+with per-row delete and a one-tap Excel export.
+
+## 4b · Account (a real section, not a popup)
+
+The avatar in the header (and the Account tab) opens: **Profile** — who is signed in,
+sync state, how many transactions are stored and the period they cover, with a
+*Sync now* button. **Settings** — currency, light/dark, target keep-rate and ramp
+length, which drive the path banner. **Your data** — upload Excel, export everything
+in the exact upload format, download the sample. **Security** — change password
+(entered twice), sign out. **Danger zone** — *Reset everything*, wiping local *and*
+cloud after two confirmations.
+
+Sync never destroys local work: signing in on a device that already has data seeds an
+empty cloud from that device and merges when both sides have rows. Budgets, profile
+and the path baseline sync the moment they change.
 
 ## 5 · Privacy model
 
