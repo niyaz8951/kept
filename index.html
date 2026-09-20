@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Money Recovery — Financial Intelligence</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#114B3C">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<body>
+<div class="appwrap">
+<header>
+ <div class="hrow">
+  <div class="brand">Money Recovery<small>Financial intelligence · savings first</small></div>
+  <div class="spacer"></div>
+  <label class="btn filebtn">Upload expense Excel<input type="file" id="file" accept=".xlsx,.xls,.csv"></label>
+  <select class="hsel" id="cur" title="Currency">
+   <option value="SAR" selected>SAR</option><option value="AED">AED</option>
+   <option value="INR">INR</option><option value="USD">USD</option>
+  </select>
+  <span class="syncbadge" id="syncBadge">…</span>
+  <button class="btn" id="themeBtn" title="Toggle dark / light">Dark</button>
+  <button class="btn primary" id="presBtn">Present</button>
+ </div>
+ <nav class="tabs" id="tabs">
+  <button data-t="overview" class="on">Overview</button>
+  <button data-t="add">Add today</button>
+  <button data-t="analysis">Analysis</button>
+  <button data-t="life">Life plan</button>
+  <button data-t="spending">Spending</button>
+  <button data-t="cfo">CFO view</button>
+  <button data-t="months">Month-on-month</button>
+  <button data-t="habits">Habits</button>
+  <button data-t="cuts">Cut costs</button>
+  <button data-t="debt">Debt plan</button>
+  <button data-t="save">Save &amp; grow</button>
+  <button data-t="forecast">Forecast &amp; risks</button>
+  <button data-t="coach">Coach</button>
+ </nav>
+</header>
+<div class="banner" id="pathBanner"></div>
+
+<div class="wrap" id="app">
+
+<div class="hero an" id="hero">
+ <div class="hero-in">
+  <div>
+   <h1 id="heroTitle">Loading your money story…</h1>
+   <div class="verdict" id="heroVerdict"></div>
+  </div>
+  <div>
+   <div class="waffle" id="waffle"></div>
+   <div class="wleg">
+    <span><em style="background:#5FD8A4"></em>Kept (cash saved)</span>
+    <span><em style="background:#F0B14C"></em>Debt payments</span>
+    <span><em style="background:rgba(255,255,255,.28)"></em>Spent</span>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- OVERVIEW -->
+<section class="tab-pane on" id="pane-overview">
+ <div class="kpis" id="kpis"></div>
+ <div class="g2">
+  <div class="card an">
+   <h3>Financial discipline score</h3>
+   <div class="sub">Six factors, weighted. The score moves only when behavior moves.</div>
+   <div class="score-wrap">
+    <div class="gauge" id="gauge"></div>
+    <div class="factors" id="factors"></div>
+   </div>
+   <div id="scoreWhy"></div>
+  </div>
+  <div class="card an">
+   <h3>Income vs spending vs saved — monthly</h3>
+   <div class="sub">Real income only. Borrowed money is excluded from income here.</div>
+   <div class="chartbox tall"><canvas id="chTrend"></canvas></div>
+  </div>
+ </div>
+ <div class="card an">
+  <h3>The honest income statement</h3>
+  <div class="sub">What actually came in, what actually left, over the whole period on file.</div>
+  <div class="g3" id="honest"></div>
+  <div id="honestInsight"></div>
+ </div>
+</section>
+
+<!-- SPENDING -->
+<section class="tab-pane" id="pane-spending">
+ <div class="ctl card" style="padding:12px 16px">
+  <label>Period
+   <select class="inp" id="spendPeriod"><option value="all">All months</option></select>
+  </label>
+  <label>Search transactions
+   <input class="inp" id="txSearch" placeholder="merchant, category…" style="width:220px">
+  </label>
+ </div>
+ <div class="g2">
+  <div class="card"><h3>Where the money goes</h3><div class="sub" id="spendSub"></div>
+   <div class="chartbox"><canvas id="chCat"></canvas></div></div>
+  <div class="card"><h3>Category map</h3><div class="sub">Tile size = share of spending.</div>
+   <div class="treemap" id="treemap"></div></div>
+ </div>
+ <div class="card"><h3>Monthly spending by category</h3><div class="sub">Stacked. Watch which colors grow.</div>
+  <div class="chartbox tall"><canvas id="chStack"></canvas></div></div>
+ <div class="g2">
+  <div class="card"><h3>Top merchants</h3><div class="sub">Where you actually swipe.</div><div id="merchants"></div></div>
+  <div class="card"><h3>Category detail</h3><div class="sub">Click a column head to sort.</div>
+   <div class="tblwrap" style="max-height:340px;overflow-y:auto"><table class="t" id="catTable"></table></div></div>
+ </div>
+ <div class="card"><h3>Transactions</h3><div class="sub" id="txCount"></div>
+  <div class="tblwrap" style="max-height:420px;overflow-y:auto"><table class="t" id="txTable"></table></div></div>
+</section>
+
+<!-- HABITS -->
+
+
+
+<section class="tab-pane" id="pane-add">
+ <div class="g2">
+  <div class="card an"><h3>Add today's spending</h3>
+   <div class="sub">Thirty seconds a day beats waiting for the card statement — the projections and the path check update instantly.</div>
+   <div class="qgrid">
+    <div><label class="sub">Amount</label><input class="inp" id="qaAmt" type="number" inputmode="decimal" placeholder="0.00" style="width:100%;font-size:20px"></div>
+    <div><label class="sub">Date</label><input class="inp" id="qaDate" type="date" style="width:100%"></div>
+    <div class="full"><label class="sub">What was it</label><input class="inp" id="qaDesc" placeholder="e.g. Carrefour, taxi, tea" style="width:100%"></div>
+    <div class="full"><div class="catchips" id="qaCats"></div></div>
+    <div class="full"><button class="bigbtn" id="qaSave">Save entry</button></div>
+   </div>
+   <div id="qaMsg"></div></div>
+  <div class="card an"><h3>Or paste the bank SMS</h3>
+   <div class="sub">Copy the debit messages from your bank (one per line) and paste — amounts, merchants and dates are read automatically, duplicates are skipped.</div>
+   <textarea class="inp" id="qaPaste" rows="6" style="width:100%" placeholder="Purchase of AED 45.60 with card ending 4417 at CARREFOUR, DUBAI..."></textarea>
+   <button class="bigbtn ghost" id="qaParse" style="margin-top:10px">Parse &amp; save</button></div>
+ </div>
+ <div class="card an"><h3>Recent entries</h3><div class="qlist" id="qaRecent"></div></div>
+</section>
+<section class="tab-pane" id="pane-analysis">
+ <div class="sub" style="margin:4px 2px 0">The full board pack as a scrolling story — same numbers as the desktop presentation, built for a phone.</div>
+ <div id="anaWrap"></div>
+</section>
+<section class="tab-pane" id="pane-life">
+ <div class="g2">
+  <div class="card an"><h3>Profile — the people this money is for</h3>
+   <div class="sub">Age, family, the big expenses ahead. Saved on this device (and synced if you sign in).</div>
+   <div id="lifeForm"></div></div>
+  <div class="card an"><h3>Three paths, one life</h3>
+   <div class="sub">Real (inflation-adjusted) money. The gap between rows is not luck — it is the keep-rate, compounded.</div>
+   <div class="tblwrap"><table class="t" id="lifeTable"></table></div></div>
+ </div>
+ <div class="card an"><h3>The brutal arithmetic</h3>
+  <div class="sub">Computed from your file and your profile. It is meant to sting — and to be re-run every month until it doesn't.</div>
+  <div id="lifeBrutal"></div></div>
+</section>
+<section class="tab-pane" id="pane-cfo">
+ <div class="g2">
+  <div class="card an"><h3>Household P&amp;L — run like a company</h3>
+   <div class="sub">Average per month across full months. Revenue at the top, profit (kept) at the bottom — the household's operating statement.</div>
+   <div class="tblwrap"><table class="t" id="plTable"></table></div>
+   <div id="plInsight"></div></div>
+  <div class="card an"><h3>Cash flow statement</h3>
+   <div class="sub">The corporate three-section view: operating, financing, investing — whole period.</div>
+   <div class="tblwrap"><table class="t" id="cfTable"></table></div>
+   <div id="cfInsight"></div></div>
+ </div>
+ <div class="g2">
+  <div class="card an"><h3>Cost structure &amp; break-even</h3>
+   <div class="sub">Fixed commitments vs variable choices — and the day of the month your salary stops being yours.</div>
+   <div id="beBox"></div></div>
+  <div class="card an"><h3>Spending controls — the approval workflow</h3>
+   <div class="sub">Corporate procurement rules applied at home, scored against the latest full month.</div>
+   <div class="tblwrap"><table class="t" id="ctlTable"></table></div>
+   <div id="ctlInsight"></div></div>
+ </div>
+ <div class="card an"><h3>Budget vs actual — variance report</h3>
+  <div class="sub">Every dirham gets a job before the month starts. Budgets are proposed from your history (discretionary trimmed ~20%); edit them — they are saved in this browser. Variance is scored on the latest full month, exactly like a monthly management report.</div>
+  <div class="tblwrap"><table class="t" id="bvTable"></table></div>
+  <div id="bvInsight"></div></div>
+ <div class="card an"><h3>Where your model of money is wrong — the evidence</h3>
+  <div class="sub">Not opinions. Each gap below is proven by rows in your own file, with the principle that replaces it.</div>
+  <div id="gapsBox"></div></div>
+</section>
+<section class="tab-pane" id="pane-months">
+ <div class="card an"><h3 id="momTitle">Yearly chart</h3>
+  <div class="sub">Each series is one calendar year, January to December — the years lie on top of each other so the same month compares across years. Every upload extends this chart.</div>
+  <div class="mchips" id="momChips"></div>
+  <div class="chartbox tall"><canvas id="chMoM"></canvas></div>
+  <div class="mcards" id="momCards"></div>
+ </div>
+ <div class="g2">
+  <div class="card an"><h3>What the pattern says comes next</h3>
+   <div class="sub">Projected from your own habits: half recent 3-month run-rate, half what the same month cost last year.</div>
+   <div id="momForecast"></div></div>
+  <div class="card an"><h3>Where to be cautious</h3>
+   <div class="sub">Computed warnings — the months and categories where your history says the money slips.</div>
+   <div id="momCaution"></div></div>
+ </div>
+ <div class="card an"><h3>Month by month — history and projection</h3>
+  <div class="sub">Actuals for finished months; the next three months are projected from your pattern and marked.</div>
+  <div class="tblwrap" style="max-height:430px;overflow-y:auto"><table class="t" id="momTable"></table></div></div>
+</section>
+<section class="tab-pane" id="pane-habits">
+ <div class="card"><h3>The borrowed-money truth</h3>
+  <div class="sub">Money that arrived as loans is not income. This is how much of your inflow was actually debt.</div>
+  <div id="borrowTruth"></div></div>
+ <div class="g2">
+  <div class="card"><h3>Spending by day of week</h3><div class="sub" id="dowSub"></div>
+   <div class="chartbox short"><canvas id="chDow"></canvas></div><div id="dowInsight"></div></div>
+  <div class="card"><h3>Spending across the month</h3><div class="sub">Day 1–31, averaged. Salary-day and month-end behavior shows up here.</div>
+   <div class="chartbox short"><canvas id="chDom"></canvas></div><div id="domInsight"></div></div>
+ </div>
+ <div class="g2">
+  <div class="card"><h3>Small-purchase leak</h3><div class="sub" id="smallSub"></div>
+   <div class="chartbox short"><canvas id="chSmall"></canvas></div><div id="smallInsight"></div></div>
+  <div class="card"><h3>Lifestyle inflation check</h3><div class="sub">3-month rolling average of discretionary spending (food out, shopping, entertainment, electronics).</div>
+   <div class="chartbox short"><canvas id="chLife"></canvas></div><div id="lifeInsight"></div></div>
+ </div>
+ <div class="card"><h3>Recurring charges detected</h3>
+  <div class="sub">Same merchant, three or more months. Each one is a standing order on your future.</div>
+  <div class="tblwrap"><table class="t" id="recurTable"></table></div></div>
+</section>
+
+<!-- CUTS -->
+<section class="tab-pane" id="pane-cuts">
+ <div class="card"><h3>Top 10 money leaks</h3>
+  <div class="sub">Ranked by annualized cost. These are computed from your own transactions, not generic advice.</div>
+  <div id="leaks"></div></div>
+ <div class="g3">
+  <div class="card"><h3>Quick wins — this week</h3><div class="sub">No lifestyle change required.</div><div id="cutsQuick"></div></div>
+  <div class="card"><h3>Medium actions — this month</h3><div class="sub">Small habit changes.</div><div id="cutsMed"></div></div>
+  <div class="card"><h3>Major actions — this quarter</h3><div class="sub">Structural decisions.</div><div id="cutsMajor"></div></div>
+ </div>
+ <div class="card"><h3>Your commitment</h3>
+  <div class="sub">Tick what you will actually do. The total becomes your monthly savings pledge.</div>
+  <div id="commitList"></div>
+  <div class="commit-total" id="commitTotal">Pledged: 0 / month</div></div>
+</section>
+
+<!-- DEBT -->
+<section class="tab-pane" id="pane-debt">
+ <div class="kpis" id="debtKpis"></div>
+ <div class="card"><h3>Your loans</h3>
+  <div class="sub">Balances detected from disbursements minus repayments where possible. Anything marked <span class="est">estimate</span> — correct it with your real figure; every number is editable.</div>
+  <div class="tblwrap"><table class="t" id="loanTable"></table></div></div>
+ <div class="card"><h3>Payoff simulator — snowball vs avalanche</h3>
+  <div class="sub">Snowball kills the smallest balance first (motivation). Avalanche kills the highest rate first (mathematics).</div>
+  <div class="ctl">
+   <label>Extra payment per month <span class="num" id="extraLbl" style="font-size:16px;color:var(--pine2)">0</span>
+    <input type="range" id="extraPay" min="0" max="4000" step="100" value="500" style="width:240px"></label>
+  </div>
+  <div class="g2">
+   <div><div class="chartbox"><canvas id="chPayoff"></canvas></div></div>
+   <div id="payoffCompare"></div>
+  </div>
+  <div id="payoffReco"></div></div>
+</section>
+
+<!-- SAVE & GROW -->
+<section class="tab-pane" id="pane-save">
+ <div class="card"><h3>Savings scenarios</h3>
+  <div class="sub">Three levels of ambition against your real average income. Growth assumes the return you set.</div>
+  <div class="ctl">
+   <label>Expected annual return %<input class="inp" type="number" id="retPct" value="6" min="0" max="15" step="0.5" style="width:90px"></label>
+  </div>
+  <div class="g3" id="saveCards"></div>
+  <div class="chartbox tall"><canvas id="chSave"></canvas></div></div>
+ <div class="g2">
+  <div class="card"><h3>Emergency fund</h3><div class="sub">Target: 6 months of essential spending.</div><div id="efund"></div></div>
+  <div class="card"><h3>Recommended budget vs your actual</h3><div class="sub">A debt-recovery allocation, not the generic 50/30/20.</div>
+   <div class="chartbox short"><canvas id="chBudget"></canvas></div><div id="budgetInsight"></div></div>
+ </div>
+</section>
+
+<!-- FORECAST -->
+<section class="tab-pane" id="pane-forecast">
+ <div class="kpis" id="fcKpis"></div>
+ <div class="card"><h3>Twelve-month projection</h3>
+  <div class="sub">3-month moving averages of real income and spending, projected forward. Shaded = cumulative cash position.</div>
+  <div class="chartbox tall"><canvas id="chForecast"></canvas></div><div id="fcInsight"></div></div>
+ <div class="card"><h3>Risk register</h3><div class="sub">Ranked by severity, from your own data.</div><div id="risks"></div></div>
+ <div class="card"><h3>Anomalies &amp; data hygiene</h3><div class="sub">Unusual transactions and likely miscategorized rows worth fixing in the sheet.</div><div id="anoms"></div></div>
+</section>
+
+<!-- COACH -->
+<section class="tab-pane" id="pane-coach">
+ <div class="g2">
+  <div class="card"><h3>What you did well</h3><div id="coachGood"></div></div>
+  <div class="card"><h3>Areas of concern</h3><div id="coachBad"></div></div>
+ </div>
+ <div class="card"><h3>Financial reality check</h3><div class="sub">Direct, no sugarcoating.</div><div id="reality"></div></div>
+ <div class="card"><h3>Action plan</h3><div class="g2" id="plan"></div></div>
+ <div class="card"><h3>Accountability — period vs period</h3>
+  <div class="sub">Latest full month against the three months before it. Green means genuinely improving.</div>
+  <div class="tblwrap"><table class="t" id="acctTable"></table></div></div>
+</section>
+
+</div>
+
+<footer>Figures are computed locally in your browser from the uploaded file — nothing is sent anywhere. Interest rates and balances marked "estimate" are transparent guesses; replace them with real numbers for exact payoff dates.</footer>
+
+<!-- presentation deck -->
+
+<div class="sheet" id="authSheet"><div class="panel">
+ <h3>Sign in / create account</h3>
+ <div class="sub">Free Supabase account — your rows are private to your login (row-level security).</div>
+ <input class="inp" id="authEmail" type="email" placeholder="email" style="width:100%;margin:8px 0">
+ <input class="inp" id="authPass" type="password" placeholder="password (min 6)" style="width:100%;margin:0 0 8px">
+ <div class="sub" id="authMsg"></div>
+ <button class="bigbtn" id="authGo">Continue</button>
+ <button class="bigbtn ghost" id="authClose" style="margin-top:8px">Stay local-only</button>
+</div></div>
+<nav class="bottomnav" id="bnav">
+ <button data-t="overview" class="on"><span class="ic">◧</span>Home</button>
+ <button data-t="add"><span class="ic">＋</span>Add</button>
+ <button data-t="analysis"><span class="ic">▤</span>Analysis</button>
+ <button data-t="cfo"><span class="ic">Σ</span>CFO</button>
+ <button data-t="life"><span class="ic">◔</span>Life</button>
+</nav>
+</div><!-- /appwrap -->
+<div id="deck">
+ <div class="stage"><div class="slide" id="slide"></div></div>
+ <div id="laser"></div>
+ <div class="deckbar">
+  <button id="dPrev">◀ Prev</button>
+  <div class="prog"><i id="dProg"></i></div>
+  <span class="cnt" id="dCnt"></span>
+  <button id="dNext" title="Next (→ / space / click)">Next ▶</button>
+  <button id="dLaser" class="on" title="Laser pointer (L)">●</button>
+  <button id="dFs" title="Full screen (F)">⛶</button>
+  <button id="dExit" title="Exit (Esc)">Exit</button>
+ </div>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<script src="js/store.js"></script>
+<script src="js/core.js"></script>
+<script src="js/render.js"></script>
+<script src="js/render2.js"></script>
+<script src="js/deck.js"></script>
+<script src="js/quickadd.js"></script>
+<script src="js/life.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/app.js"></script>
+</body></html>

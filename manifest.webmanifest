@@ -1,0 +1,13 @@
+{
+ "name": "Money Recovery — Financial Wellbeing",
+ "short_name": "Money Recovery",
+ "description": "Run your home like a company: P&L, budgets, controls, projections and brutal life math.",
+ "start_url": "./index.html",
+ "display": "standalone",
+ "background_color": "#F4F6F2",
+ "theme_color": "#114B3C",
+ "icons": [
+  {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+  {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+ ]
+}
