@@ -383,3 +383,5 @@ nav.tabs button{padding:12px 14px}
 .skip{position:absolute;left:-9999px;top:auto}
 .skip:focus{left:8px;top:8px;z-index:400;background:var(--card);color:var(--ink);padding:10px 14px;border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.brand .ver{opacity:.55;font-size:10px;letter-spacing:.5px;margin-left:4px}

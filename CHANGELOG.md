@@ -1,5 +1,17 @@
 # Kept — changelog
 
+## v7 — the hero card was never inside a tab
+
+- **Root cause of "the big banner shows on every tab".** The hero card (`<div id="hero">`,
+  the keep-rate waffle and the no-data welcome) sat in the page shell *between* the nav and
+  the `.tab-pane` sections, so it was never governed by tab switching — it painted on every
+  screen by construction. It now lives inside `#pane-overview` and appears only there.
+- Tab logic split into two honest rules: which screens have their own no-data content
+  (Overview, Add, History, Life plan, Account) and which renderers can run with no data —
+  Overview keeps its welcome instead of being overwritten by the generic empty state.
+- A small version tag (`v7`) sits next to the wordmark, so you can tell at a glance whether
+  the browser is showing the build you just uploaded or a cached one.
+
 ## v6 — boot crash fix (this is why every tab looked the same)
 
 - **`Sync.init()` threw on every load where Supabase keys were absent.** It still wrote to

@@ -10,14 +10,15 @@ function showTab(t){
   b.classList.toggle("on",on); b.setAttribute("aria-current",on?"page":"false"); });
  document.querySelectorAll(".tab-pane").forEach(p=>{ const on=p.id==="pane-"+t;
   p.classList.toggle("on",on); p.setAttribute("role","tabpanel"); if(on) p.removeAttribute("hidden"); else p.setAttribute("hidden",""); });
- const always={add:1,life:1,account:1,history:1};
- if(!M && !always[t]){
+ const ownEmptyState={overview:1,add:1,life:1,account:1,history:1};  // these screens speak for themselves with no data
+ const rendersWithoutData={add:1,life:1,account:1,history:1};       // ...and these renderers tolerate M === null
+ if(!M && !ownEmptyState[t]){
   const pane=$$("pane-"+t);
   if(pane && !pane.dataset.emptied){ pane.dataset.emptied="1"; PANE_HTML[t]=PANE_HTML[t]||pane.innerHTML;
    pane.innerHTML='<div class="card an"><h3>Nothing to analyse yet</h3><div class="sub">This screen needs transactions. Upload your Excel in <b>Account → Your data</b>, or log today\'s spending in <b>Add</b> — the analysis appears the moment there is data.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="bigbtn" style="width:auto;padding:12px 18px" onclick="showTab(\'add\')">Log an expense</button><button class="bigbtn ghost" style="width:auto;padding:12px 18px" onclick="showTab(\'account\')">Upload Excel</button></div></div>';
   }
  }
- if((M||always[t]) && !done[t]){ RENDERERS[t](); done[t]=true; }
+ if((M||rendersWithoutData[t]) && !done[t]){ RENDERERS[t](); done[t]=true; }
  if(typeof updateBanner==="function") updateBanner();
  window.scrollTo({top:0});
 }
@@ -25,7 +26,7 @@ function renderAll(){
  for(const k in done) delete done[k];
  document.querySelectorAll(".tab-pane[data-emptied]").forEach(p=>{
   const k=p.id.replace("pane-",""); if(PANE_HTML[k]) p.innerHTML=PANE_HTML[k]; delete p.dataset.emptied; });
- if(!document.getElementById("waffle") && HERO_HTML) $$("hero").innerHTML=HERO_HTML;   // restore hero after the empty-state welcome
+ if(!document.getElementById("waffle") && HERO_HTML && $$("hero")) $$("hero").innerHTML=HERO_HTML;
  chartDefaults(); renderHero(); updateBanner(); showTab(document.querySelector("nav.tabs button.on").dataset.t);
  // pre-render current tab happens in showTab; others lazy
 }
@@ -118,6 +119,7 @@ function updateBanner(){
    $$("hero").innerHTML='<div class="empty"><h2>Could not read the stored data</h2><p>Your transactions are still saved. Export them from <b>Account → Your data</b> and re-upload, or reset if the file is damaged.</p></div>'; } }
  else {
   const tm=$$("thisMonth"); if(tm&&tm.closest(".card")) tm.closest(".card").style.display="none";
+  PANE_HTML.overview=PANE_HTML.overview||$$("pane-overview").innerHTML;
   $$("hero").innerHTML='<div class="empty"><h2>Kept starts with one question:<br>how much of your money stays yours?</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p><p><button class="bigbtn ghost" id="uploadBtn" style="width:auto;padding:10px 18px;margin-right:8px">⬆ Upload expense Excel</button><button class="bigbtn ghost" id="sampleBtn" style="width:auto;padding:10px 18px">📄 Download sample Excel</button></p></div>';
   $$("sampleBtn").addEventListener("click",()=>Account.sample());
   $$("uploadBtn").addEventListener("click",()=>{ showTab("account"); setTimeout(()=>$$("acFile").click(),120); });

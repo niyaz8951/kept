@@ -1,5 +1,5 @@
 /* Offline-first service worker: the whole app shell is cached, so it opens like a native app. */
-const V = "kept-v6";
+const V = "kept-v7";
 const SHELL = [
  "./","./index.html","./css/app.css","./manifest.webmanifest","./config.js",
  "./vendor/xlsx.full.min.js","./vendor/chart.umd.js","./vendor/supabase.js",
