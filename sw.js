@@ -1,10 +1,10 @@
 /* Offline-first service worker: the whole app shell is cached, so it opens like a native app. */
-const V = "kept-v1";
+const V = "kept-v2";
 const SHELL = [
  "./","./index.html","./css/app.css","./manifest.webmanifest","./config.js",
  "./vendor/xlsx.full.min.js","./vendor/chart.umd.js","./vendor/supabase.js",
  "./js/store.js","./js/core.js","./js/render.js","./js/render2.js","./js/deck.js",
- "./js/quickadd.js","./js/life.js","./js/analysis.js","./js/sync.js","./js/app.js",
+ "./js/quickadd.js","./js/account.js","./js/life.js","./js/analysis.js","./js/sync.js","./js/app.js",
  "./icons/icon-192.png","./icons/icon-512.png"
 ];
 self.addEventListener("install", e => {

@@ -251,7 +251,8 @@ function breakevenModel(m){
  return {committed, share:p.rev?committed/p.rev*100:0, day, p};
 }
 function budgetLoad(){ try{ return JSON.parse(localStorage.getItem("kept_budget")||"{}"); }catch(e){ return {}; } }
-function budgetSave(o){ try{ localStorage.setItem("kept_budget",JSON.stringify(o)); }catch(e){} }
+function budgetSave(o){ try{ localStorage.setItem("kept_budget",JSON.stringify(o)); }catch(e){}
+ if(typeof Sync!=="undefined"&&Sync.queuePush) Sync.queuePush(); }
 function budgetFor(){
  const saved=budgetLoad(), nM=M.fullMonths.length||1, out={};
  Object.entries(M.catTotal).sort((a,b)=>b[1]-a[1]).slice(0,10).forEach(([c,v])=>{

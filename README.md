@@ -47,9 +47,14 @@ Since you own `thinkneering.com`: in the repo create a file `CNAME` containing
 
 ## 3 · Feeding Kept
 
+- **Sample file**: not sure of the format? The welcome screen, the Add tab and the
+  Account sheet all offer **Download sample Excel** — a small fictional file in the exact
+  upload layout (Month, Date, Expense, Amount with negatives as spending, Category, Remarks).
 - **History**: header → *Upload* → your Excel/CSV. Columns are auto-mapped (Date,
-  Description/Expense, Amount with negatives as spending, or Debit/Credit, Category,
-  Remarks). Re-uploads are de-duplicated — one growing file or monthly statements both work.
+  Description/Expense, Amount, or Debit/Credit, Category, Remarks). **Uploading restarts
+  Kept**: after a confirmation, the file becomes the single source of truth — the previous
+  local data (and your cloud copy, if signed in) is replaced and the path baseline resets.
+  Keep one master Excel, add daily entries in between, and export before re-uploading.
 - **Daily** (the habit that beats every statement): **Add today** — amount, category chip,
   save. Or paste bank SMS messages, one per line; amounts, merchants and dates are parsed
   and categorized automatically.
@@ -70,6 +75,16 @@ Since you own `thinkneering.com`: in the repo create a file `CNAME` containing
   5/10/20-year and retirement outcomes on your current path vs 20% vs 40%, education
   coverage per child, and the compounded cost of every undisciplined year — all in
   today's money.
+
+## 4b · Account (after sign-in)
+
+Tap the header badge: **Account & data** shows your email and gives you
+change-password (asked twice), **Export all data** as an Excel in the exact upload
+format (your backup and your portability), **Download sample Excel**, sign out, and a
+**Reset everything** danger zone that wipes local *and* cloud data after two
+confirmations. In local mode the same sheet offers export, sample and reset.
+Every setting — budgets, profile, path baseline — syncs to your Supabase rows the
+moment it changes, so a lost phone loses nothing.
 
 ## 5 · Privacy model
 

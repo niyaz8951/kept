@@ -63,18 +63,25 @@ $$("file").addEventListener("change",e=>{
   try{
    const wb=XLSX.read(ev.target.result,{type:"array",cellDates:true});
    const rows=parseWorkbook(wb);
-   const res=Store.merge(rows);
+   if(!rows.length){ alert("No usable rows found — download the sample Excel to see the expected format."); return; }
+   const cur=Store.load().length;
+   if(cur && !confirm("Uploading a file RESTARTS Kept with this file as the new source of truth.\n\nYour current "+cur+" transactions (including daily entries)"+((typeof Sync!=="undefined"&&Sync.user&&Sync.user())?" and your cloud copy":"")+" will be replaced by the "+rows.length+" rows in this file.\n\nExport first if you need a backup. Continue?")) { e.target.value=""; return; }
+   Store.replaceAll(rows);
+   Store.setMeta("pathBase",null);           // the ramp restarts from this upload
    RAW=Store.txns();
    M=RAW.length?build(RAW):null;
    $$("spendPeriod").innerHTML='<option value="all">All months</option>';
    if(M) renderAll();
-   if(typeof Sync!=="undefined") Sync.queuePush();
-   alert(res.added+" new transactions imported ("+(rows.length-res.added)+" duplicates skipped). Total on record: "+res.total+".");
+   if(typeof Sync!=="undefined"&&Sync.user&&Sync.user()) Sync.replaceCloud(); else if(typeof Sync!=="undefined") Sync.queuePush();
+   alert("Fresh start: "+rows.length+" transactions loaded. The path baseline has been reset — this file is now the source of truth.");
+   e.target.value="";
    window.scrollTo({top:0,behavior:"smooth"});
   }catch(err){ alert("Could not read that file: "+err); }
  };
  rd.readAsArrayBuffer(f);
 });
+$$("acctClose").addEventListener("click",()=>$$("acctSheet").classList.remove("on"));
+$$("sampleLink").addEventListener("click",e=>{ e.preventDefault(); Account.sample(); });
 function updateBanner(){
  const b=$$("pathBanner"); if(!M){ b.className="banner"; return; }
  const st=Life.pathStatus(); if(!st){ b.className="banner"; return; }
@@ -90,7 +97,8 @@ function updateBanner(){
  QuickAdd.init();
  if(RAW.length){ M=build(RAW); renderAll(); }
  else {
-  $$("hero").innerHTML='<div class="empty"><h2>Kept starts with one question:<br>how much of your money stays yours?</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p></div>';
+  $$("hero").innerHTML='<div class="empty"><h2>Kept starts with one question:<br>how much of your money stays yours?</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p><p><button class="bigbtn ghost" id="sampleBtn" style="width:auto;padding:10px 18px">📄 Download sample Excel</button></p></div>';
+  $$("sampleBtn").addEventListener("click",()=>Account.sample());
   updateBanner();
  }
  if(typeof Sync!=="undefined") Sync.init();

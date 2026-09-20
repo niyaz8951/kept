@@ -30,7 +30,7 @@ const Sync = (() => {
  async function init(){
   const badge=$$("syncBadge");
   if(!enabled()){ badge.textContent="Local only"; badge.title="Add Supabase keys in config.js to enable login + sync";
-   badge.addEventListener("click",()=>alert("Cloud sync is off. Kept is running fully on this device.\n\nTo enable free login + backup: create a Supabase project, run supabase/schema.sql, and put the Project URL and anon key into config.js (see README).")); return; }
+   badge.addEventListener("click",()=>Account.open()); return; }
   const cu=cleanURL();
   if(cu.err){ badge.textContent="Sync misconfigured"; badge.title=cu.err;
    badge.addEventListener("click",()=>alert("Sync is not usable yet:\n\n"+cu.err)); return; }
@@ -41,7 +41,7 @@ const Sync = (() => {
   sb=window.supabase.createClient(cu.url,(rawCfg().SUPABASE_ANON_KEY||"").trim());
   const {data}=await sb.auth.getSession(); user=data.session?.user||null;
   paintBadge();
-  badge.addEventListener("click",()=>{ user? signOutAsk() : openSheet(); });
+  badge.addEventListener("click",()=>{ user? Account.open() : openSheet(); });
   // form wiring
   $$("atSignin").addEventListener("click",()=>setMode("signin"));
   $$("atSignup").addEventListener("click",()=>setMode("signup"));
@@ -115,6 +115,12 @@ const Sync = (() => {
   }catch(e){ msg(friendly(e),"err"); }
  }
  function signOutAsk(){ if(confirm("Sign out? Data stays on this device.")) sb.auth.signOut().then(()=>location.reload()); }
+ async function updatePassword(pw){ if(!sb||!user) return {error:{message:"Not signed in."}};
+  try{ const r=await sb.auth.updateUser({password:pw}); return r; }catch(e){ return {error:{message:String(e.message||e)}}; } }
+ async function deleteCloud(){ if(!sb||!user) return;
+  await sb.from("transactions").delete().eq("user_id",user.id);
+  await sb.from("meta").delete().eq("user_id",user.id); }
+ async function replaceCloud(){ if(!sb||!user) return; await deleteCloud(); await push(); }
  async function push(){
   if(!sb||!user) return;
   const rows=Store.load().map(r=>({user_id:user.id, hash:r[5]||Store.hash(r), d:r[0], descr:r[1], amount:r[2], cat:r[3]||"", remark:r[4]||""}));
@@ -122,18 +128,22 @@ const Sync = (() => {
    const {error}=await sb.from("transactions").upsert(rows.slice(i,i+500),{onConflict:"user_id,hash"});
    if(error){ console.warn("push",error.message); break; }
   }
-  await sb.from("meta").upsert({user_id:user.id, k:"meta", v:JSON.parse(localStorage.getItem("kept_meta")||"{}")},{onConflict:"user_id,k"});
+  await sb.from("meta").upsert([
+   {user_id:user.id, k:"meta",   v:JSON.parse(localStorage.getItem("kept_meta")||"{}")},
+   {user_id:user.id, k:"budget", v:JSON.parse(localStorage.getItem("kept_budget")||"{}")}
+  ],{onConflict:"user_id,k"});
  }
  async function pull(){
   if(!sb||!user) return;
   const {data,error}=await sb.from("transactions").select("d,descr,amount,cat,remark").eq("user_id",user.id).limit(50000);
   if(error||!data) return;
   const res=Store.merge(data.map(r=>[r.d,r.descr,r.amount,r.cat,r.remark]));
-  const m=await sb.from("meta").select("v").eq("user_id",user.id).eq("k","meta").maybeSingle();
-  if(m.data&&m.data.v){ try{ const cur=JSON.parse(localStorage.getItem("kept_meta")||"{}");
-   localStorage.setItem("kept_meta",JSON.stringify(Object.assign(m.data.v,cur))); }catch(e){} }
+  const mm=await sb.from("meta").select("k,v").eq("user_id",user.id);
+  (mm.data||[]).forEach(row=>{ const key=row.k==="budget"?"kept_budget":"kept_meta";
+   try{ const cur=JSON.parse(localStorage.getItem(key)||"{}");
+    localStorage.setItem(key,JSON.stringify(Object.assign(row.v||{},cur))); }catch(e){} });
   if(res.added){ RAW=Store.txns(); M=RAW.length?build(RAW):null; if(M) renderAll(); }
  }
  function queuePush(){ if(!sb||!user) return; clearTimeout(timer); timer=setTimeout(push,4000); }
- return {init,queuePush,push,pull,enabled,cleanURL};
+ return {init,queuePush,push,pull,enabled,cleanURL,signOutAsk,updatePassword,deleteCloud,replaceCloud,user:()=>user};
 })();

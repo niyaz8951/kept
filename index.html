@@ -133,7 +133,7 @@
    </div>
    <div id="qaMsg"></div></div>
   <div class="card an"><h3>Or paste the bank SMS</h3>
-   <div class="sub">Copy the debit messages from your bank (one per line) and paste — amounts, merchants and dates are read automatically, duplicates are skipped.</div>
+   <div class="sub">Copy the debit messages from your bank (one per line) and paste — amounts, merchants and dates are read automatically, duplicates are skipped. New here? <a href="#" id="sampleLink">Download the sample Excel</a> to see the upload format.</div>
    <textarea class="inp" id="qaPaste" rows="6" style="width:100%" placeholder="Purchase of AED 45.60 with card ending 4417 at CARREFOUR, DUBAI..."></textarea>
    <button class="bigbtn ghost" id="qaParse" style="margin-top:10px">Parse &amp; save</button></div>
  </div>
@@ -304,6 +304,11 @@
 
 <!-- presentation deck -->
 
+<div class="sheet" id="acctSheet"><div class="panel">
+ <h3>Account &amp; data</h3>
+ <div id="acctBody"></div>
+ <button class="bigbtn ghost" id="acctClose" style="margin-top:10px">Close</button>
+</div></div>
 <div class="sheet" id="authSheet"><div class="panel">
  <h3>Your Kept account</h3>
  <div class="sub">Free Supabase login — your rows are private to your account (row-level security).</div>
@@ -352,6 +357,7 @@
 <script src="js/quickadd.js"></script>
 <script src="js/life.js"></script>
 <script src="js/analysis.js"></script>
+<script src="js/account.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/app.js"></script>
 </body></html>

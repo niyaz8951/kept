@@ -21,7 +21,8 @@ const Store = (() => {
  function replaceAll(rows){ save(rows.map(r=>[r[0],r[1],r[2],r[3]||"",r[4]||"",hash(r)])); }
  function clear(){ try{ localStorage.removeItem(K_TX); }catch(e){} }
  function meta(k,dflt){ try{ const m=JSON.parse(localStorage.getItem(K_META)||"{}"); return k in m?m[k]:dflt; }catch(e){ return dflt; } }
- function setMeta(k,v){ try{ const m=JSON.parse(localStorage.getItem(K_META)||"{}"); m[k]=v; localStorage.setItem(K_META,JSON.stringify(m)); }catch(e){} }
+ function setMeta(k,v){ try{ const m=JSON.parse(localStorage.getItem(K_META)||"{}"); m[k]=v; localStorage.setItem(K_META,JSON.stringify(m)); }catch(e){}
+  if(typeof Sync!=="undefined"&&Sync.queuePush) Sync.queuePush(); }
  function exportJSON(){ return JSON.stringify({tx:load(), meta:JSON.parse(localStorage.getItem(K_META)||"{}")}); }
  return {hash,load,save,txns,merge,removeHash,replaceAll,clear,meta,setMeta,exportJSON};
 })();
