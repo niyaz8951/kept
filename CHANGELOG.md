@@ -1,5 +1,19 @@
 # Kept — changelog
 
+## v5 — path banner fixes
+
+- **The banner appeared on every screen.** It is a Home panel, not a site-wide header:
+  it now renders only on Overview and clears on every other tab.
+- **Nonsense keep-rate ("kept -24077%").** A month where the salary never landed was
+  still scored, so a normal month of spending divided by near-zero income produced an
+  absurd percentage. The path check now scores the most recent complete month whose
+  income is at least 40% of your usual, says plainly how many months it skipped and why,
+  clamps any rate to ±100%, and reports "NOT SCORED" when no month has a real salary yet.
+- **Month-to-date measured from the wrong day.** The "day N" came from the last row in
+  the file (day 1 in your screenshot), not the calendar. It now uses today's date, only
+  when the running month actually is the current month, and reads "under/over pace"
+  instead of contradicting the headline.
+
 ## v4 — review pass (gap review, mobile accessibility, competitive comparison)
 
 ### (a) Fixed

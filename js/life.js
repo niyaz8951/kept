@@ -10,33 +10,52 @@ const Life = (() => {
  function realRate(p){ return ((1+p.ret/100)/(1+p.infl/100)-1)*100; }
 
  /* the path: reach targetRate% keep-rate within rampMonths of the baseline month */
+ /* Path check. Guards against the two ways this number goes insane:
+    a month where the salary simply did not land (rate becomes a meaningless −24,000%),
+    and a month-to-date figure measured from the last transaction instead of today. */
  function pathStatus(){
   if(!M||!M.fullMonths.length) return null;
   const p=prof();
+  const avgInc=M.avg.income+M.avg.refund;
+  const incOf=m=>{ const q=M.per[m]; return q?q.income+q.refund:0; };
+  /* score the most recent full month whose income is credible (≥40% of the usual);
+     months where no salary arrived are reported, never scored */
+  const cands=M.fullMonths.slice().reverse();
+  const lm=cands.find(m=>incOf(m)>=Math.max(1,avgInc*0.4));
+  const skipped=cands.indexOf(lm);
   let base=Store.meta("pathBase",null);
-  if(!base){ base={m:M.fullMonths[M.fullMonths.length-1], rate:Math.max(0,M.cashKeptRate)}; Store.setMeta("pathBase",base); }
-  const lm=M.fullMonths[M.fullMonths.length-1];
-  const dm=(new Date(lm+"-01") - new Date(base.m+"-01"))/(30.44*864e5);
-  const should=Math.min(p.targetRate, base.rate + (p.targetRate-base.rate)*Math.max(0,Math.round(dm))/p.rampMonths);
-  const pm=M.per[lm], inc=pm.income+pm.refund, actual=inc>0?pm.net/inc*100:0;
-  const diff=actual-should;
-  const amt=Math.round(Math.abs(diff)/100*inc);
-  // month-to-date check on the partial month
+  if(!base||!M.per[base.m]){ base={m:M.fullMonths[0], rate:Math.max(0,Math.min(100,M.cashKeptRate))}; Store.setMeta("pathBase",base); }
+
+  /* month-to-date always uses the real calendar day, not the last row in the file */
   let mtd=null;
-  if(M.lastPartial){
-   const cur=M.months[M.months.length-1];
-   const day=Math.max(1,+((M.txns.filter(t=>t.month===cur).slice(-1)[0]||{}).dateISO||"1").slice(8));
+  const cur=M.months[M.months.length-1];
+  if(M.lastPartial&&cur){
+   const now=new Date(), sameMonth=cur===now.toISOString().slice(0,7);
+   const day=sameMonth?Math.max(1,now.getDate()):30;
    const spent=mval(M.per[cur],"out");
    const budget=(M.avg.spend+M.avg.debtpay+M.avg.invest)*day/30.44;
-   mtd={day,spent,budget,delta:spent-budget};
+   mtd={day,spent,budget,delta:spent-budget,sameMonth};
   }
+  if(!lm){
+   return {ok:null, cls:"warn", lm:null, mtd,
+    short:"no month with a normal salary yet — the path starts once one lands.",
+    line:`NOT SCORED — no complete month with a normal income yet${cands.length?` (latest complete: ${monthShort(cands[0])})`:""}. Add or upload the months containing your salary and the path check starts.`};
+  }
+  const dm=(new Date(lm+"-01") - new Date(base.m+"-01"))/(30.44*864e5);
+  const should=Math.min(p.targetRate, base.rate + (p.targetRate-base.rate)*Math.max(0,Math.round(dm))/p.rampMonths);
+  const pm=M.per[lm], inc=incOf(lm);
+  const raw=inc>0?pm.net/inc*100:0;
+  const actual=Math.max(-100,Math.min(100,raw));          // a month cannot lose more than everything it earned
+  const diff=actual-should;
+  const amt=Math.round(Math.abs(diff)/100*inc);
   const ok=diff>=-2;
+  const note=skipped>0?` (${skipped} month${skipped>1?"s":""} skipped — no salary recorded)`:"";
   return {ok, should, actual, diff, amt, lm, mtd,
    cls: ok ? (diff>=0?"ok":"warn") : "bad",
    short: ok? `on path: ${monthShort(lm)} kept ${pct(actual)} vs ${pct(should)} planned.`
             : `off path by ${money(amt)} in ${monthShort(lm)} — planned ${pct(should)}, actual ${pct(actual)}.`,
-   line: ok? `ON PATH — ${monthShort(lm)} kept ${pct(actual)} against a plan of ${pct(should)}. Hold the line.`
-           : `DEVIATION — ${monthShort(lm)} kept ${pct(actual)} vs the ${pct(should)} the ramp requires: ${money(amt)} slipped. The plan only works if the ramp holds.`};
+   line: ok? `ON PATH — ${monthShort(lm)} kept ${pct(actual)} against a plan of ${pct(should)}${note}. Hold the line.`
+           : `DEVIATION — ${monthShort(lm)} kept ${pct(actual)} against the ${pct(should)} the ramp requires: ${money(amt)} short${note}. The plan only works if the ramp holds.`};
  }
 
  function renderLife(){

@@ -18,6 +18,7 @@ function showTab(t){
   }
  }
  if((M||always[t]) && !done[t]){ RENDERERS[t](); done[t]=true; }
+ if(typeof updateBanner==="function") updateBanner();
  window.scrollTo({top:0});
 }
 function renderAll(){
@@ -94,10 +95,15 @@ function handleUpload(e){
 }
 $$("acctBtn").addEventListener("click",()=>showTab("account"));
 function updateBanner(){
- const b=$$("pathBanner"); if(!M){ b.className="banner"; return; }
- const st=Life.pathStatus(); if(!st){ b.className="banner"; return; }
+ const b=$$("pathBanner"); if(!b) return;
+ const onOverview=document.querySelector("nav.tabs button.on")?.dataset.t==="overview";
+ if(!M||!onOverview){ b.className="banner"; b.innerHTML=""; return; }   // Home only — it is not a site-wide header
+ const st=Life.pathStatus(); if(!st){ b.className="banner"; b.innerHTML=""; return; }
  let txt=st.line;
- if(st.mtd) txt+=` · Month so far (day ${st.mtd.day}): ${money(Math.round(st.mtd.spent))} out vs ${money(Math.round(st.mtd.budget))} pro-rata — ${st.mtd.delta<=0?"<b>"+money(Math.round(-st.mtd.delta))+" ahead</b>":"<b>"+money(Math.round(st.mtd.delta))+" behind</b>"}.`;
+ if(st.mtd&&st.mtd.sameMonth){
+  const ahead=st.mtd.delta<=0;
+  txt+=` · ${monthShort(M.months[M.months.length-1])} to day ${st.mtd.day}: ${money(Math.round(st.mtd.spent))} out against ${money(Math.round(st.mtd.budget))} pro-rata — <b>${money(Math.round(Math.abs(st.mtd.delta)))} ${ahead?"under":"over"}</b> pace.`;
+ }
  b.innerHTML=txt; b.className="banner on "+st.cls;
 }
 (function boot(){
