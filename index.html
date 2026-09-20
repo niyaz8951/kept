@@ -305,12 +305,18 @@
 <!-- presentation deck -->
 
 <div class="sheet" id="authSheet"><div class="panel">
- <h3>Sign in / create account</h3>
- <div class="sub">Free Supabase account — your rows are private to your login (row-level security).</div>
- <input class="inp" id="authEmail" type="email" placeholder="email" style="width:100%;margin:8px 0">
- <input class="inp" id="authPass" type="password" placeholder="password (min 6)" style="width:100%;margin:0 0 8px">
- <div class="sub" id="authMsg"></div>
- <button class="bigbtn" id="authGo">Continue</button>
+ <h3>Your Kept account</h3>
+ <div class="sub">Free Supabase login — your rows are private to your account (row-level security).</div>
+ <div class="authtabs">
+  <button class="atab on" id="atSignin" type="button">Sign in</button>
+  <button class="atab" id="atSignup" type="button">Create account</button>
+ </div>
+ <input class="inp" id="authEmail" type="email" autocomplete="email" placeholder="email" style="width:100%;margin:0 0 8px">
+ <div class="pwrow"><input class="inp" id="authPass" type="password" autocomplete="current-password" placeholder="password (min 8 characters)" style="width:100%;margin:0 0 8px"><span class="eye" id="authEye">show</span></div>
+ <div class="pwrow" id="authPass2Row" style="display:none"><input class="inp" id="authPass2" type="password" autocomplete="new-password" placeholder="repeat password" style="width:100%;margin:0 0 8px"></div>
+ <span class="authlink" id="authForgot">Forgot password?</span>
+ <div class="authmsg" id="authMsg"></div>
+ <button class="bigbtn" id="authGo">Sign in</button>
  <button class="bigbtn ghost" id="authClose" style="margin-top:8px">Stay local-only</button>
 </div></div>
 <nav class="bottomnav" id="bnav">

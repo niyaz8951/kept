@@ -38,8 +38,12 @@ Since you own `thinkneering.com`: in the repo create a file `CNAME` containing
 1. Create a free project at https://supabase.com
 2. SQL editor → run `supabase/schema.sql` (two tables locked by Row Level Security —
    every login sees only its own rows)
-3. Project Settings → API → copy the Project URL and anon public key into `config.js`,
-   commit, push. The header shows **Sign in**; the anon key is meant to be public — RLS is the lock.
+3. Project Settings → API → copy the **Project URL** (it looks exactly like
+   `https://xxxx.supabase.co` — not the dashboard address) and the **anon public** key
+   into `config.js`, commit, push. The header shows **Sign in**; the anon key is meant
+   to be public — RLS is the lock.
+4. Creating an account sends a confirmation email by default — open the link once,
+   then sign in. "Forgot password?" on the sign-in sheet sends a reset link.
 
 ## 3 · Feeding Kept
 
