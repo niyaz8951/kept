@@ -36,7 +36,8 @@ a{color:var(--pine2)}
 /* header */
 header{background:var(--pine);color:#fff;position:sticky;top:0;z-index:60;box-shadow:0 2px 14px rgba(10,40,30,.3)}
 .hrow{max-width:1280px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.brand{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.brand{font-size:21px;font-weight:800;letter-spacing:-.03em;text-transform:lowercase}
+.brand .kdot{color:#5FD8A4}
 .brand small{display:block;font-size:11px;font-weight:500;color:#BFDACB;letter-spacing:.2px}
 .spacer{flex:1}
 .btn{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.25);

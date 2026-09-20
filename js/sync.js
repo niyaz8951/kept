@@ -41,7 +41,7 @@ const Sync = (() => {
    const {error}=await sb.from("transactions").upsert(rows.slice(i,i+500),{onConflict:"user_id,hash"});
    if(error){ console.warn("push",error.message); break; }
   }
-  await sb.from("meta").upsert({user_id:user.id, k:"meta", v:JSON.parse(localStorage.getItem("mw_meta")||"{}")},{onConflict:"user_id,k"});
+  await sb.from("meta").upsert({user_id:user.id, k:"meta", v:JSON.parse(localStorage.getItem("kept_meta")||"{}")},{onConflict:"user_id,k"});
  }
  async function pull(){
   if(!sb||!user) return;
@@ -49,8 +49,8 @@ const Sync = (() => {
   if(error||!data) return;
   const res=Store.merge(data.map(r=>[r.d,r.descr,r.amount,r.cat,r.remark]));
   const m=await sb.from("meta").select("v").eq("user_id",user.id).eq("k","meta").maybeSingle();
-  if(m.data&&m.data.v){ try{ const cur=JSON.parse(localStorage.getItem("mw_meta")||"{}");
-   localStorage.setItem("mw_meta",JSON.stringify(Object.assign(m.data.v,cur))); }catch(e){} }
+  if(m.data&&m.data.v){ try{ const cur=JSON.parse(localStorage.getItem("kept_meta")||"{}");
+   localStorage.setItem("kept_meta",JSON.stringify(Object.assign(m.data.v,cur))); }catch(e){} }
   if(res.added){ RAW=Store.txns(); M=RAW.length?build(RAW):null; if(M) renderAll(); }
  }
  function queuePush(){ if(!sb||!user) return; clearTimeout(timer); timer=setTimeout(push,4000); }

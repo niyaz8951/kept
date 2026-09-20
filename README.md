@@ -1,73 +1,82 @@
-# Money Recovery — Financial Wellbeing
+# kept.
 
-Run your home like a company. A free, private, mobile-first web app that reads your
-transaction history (Excel or daily entries), builds a corporate-style view of your
-money — P&L, cash-flow statement, budgets with variance, spending controls, month-on-month
-and yearly outlooks — and confronts you with the 10/20-year arithmetic of staying on
-or off the path.
+**How much of your money stays yours.**
 
-No server required. No build step. No tracking. Your data lives in your browser;
-optionally sync it, encrypted in transit, to your own free Supabase project with login.
+Kept is a free, private, mobile-first web app that runs your household like a company.
+It reads your transaction history (Excel upload or daily entries), builds a corporate-style
+money review — P&L, cash-flow statement, zero-based budgets with variance, spending
+controls audited PASS/FAIL, month-on-month and yearly outlooks — and confronts you with
+the 10/20-year arithmetic of staying on or off the path.
 
-## 1 · Get it online (5 minutes, free)
+No server. No build step. No tracking. Your data lives in your browser; optionally sync it
+to your own free Supabase project with login.
 
-1. Create a new GitHub repository and upload everything in this folder
-   (or `git init && git add -A && git commit -m "init" && git push`).
-2. In the repo: **Settings → Pages → Source: GitHub Actions**.
-   The included workflow (`.github/workflows/pages.yml`) deploys on every push to `main`.
-3. Open `https://<your-username>.github.io/<repo>/` on your phone.
-4. **Install it like an app**: Chrome on Android → menu → *Add to Home screen*
-   (iPhone: Safari → Share → *Add to Home Screen*). It runs full-screen and offline.
+Live at: `https://niyaz8951.github.io/kept/` (after the steps below)
 
-Until you configure sync, the app is **local-only**: nothing ever leaves your device.
+## 1 · Put it online (5 minutes, free)
+
+```bash
+git init && git add -A && git commit -m "kept: first commit"
+git remote add origin git@github.com:niyaz8951/kept.git
+git branch -M main && git push -u origin main
+```
+
+Then in GitHub: **Settings → Pages → Source: GitHub Actions**.
+The included workflow deploys on every push to `main`.
+
+**Install it like an app:** open the URL on your phone → Chrome menu →
+*Add to Home screen* (iPhone: Safari → Share → *Add to Home Screen*).
+Kept runs full-screen and fully offline.
+
+### Optional: custom domain
+Since you own `thinkneering.com`: in the repo create a file `CNAME` containing
+`kept.thinkneering.com`, and at your DNS add a CNAME record
+`kept → niyaz8951.github.io`. GitHub Pages handles HTTPS automatically.
 
 ## 2 · Optional: free login + cross-device sync (Supabase)
 
-1. Create a free project at https://supabase.com.
-2. In the Supabase dashboard → SQL editor → paste and run `supabase/schema.sql`
-   (creates two tables protected by Row Level Security — each login sees only its own rows).
-3. Project Settings → API → copy the **Project URL** and **anon public** key into `config.js`.
-4. Commit and push. The header now shows **Sign in** — create your account with
-   email + password. Your history and profile sync automatically; other devices
-   pull it after login. (The anon key is designed to be public; RLS is the lock.)
+1. Create a free project at https://supabase.com
+2. SQL editor → run `supabase/schema.sql` (two tables locked by Row Level Security —
+   every login sees only its own rows)
+3. Project Settings → API → copy the Project URL and anon public key into `config.js`,
+   commit, push. The header shows **Sign in**; the anon key is meant to be public — RLS is the lock.
 
-## 3 · Feeding it data
+## 3 · Feeding Kept
 
-- **History**: header → *Upload* → your Excel/CSV. Column names are auto-mapped
-  (Date, Description/Expense, Amount with negatives as spending — or Debit/Credit
-  columns, Category, Remarks). Re-uploading is safe: rows are de-duplicated,
-  so keep one growing file or upload monthly statements — either works.
-- **Daily** (the habit that beats every statement): **Add today** tab — amount,
-  category chip, save. Or paste your bank SMS/notifications, one per line; amounts,
-  merchants and dates are parsed and categorized automatically.
+- **History**: header → *Upload* → your Excel/CSV. Columns are auto-mapped (Date,
+  Description/Expense, Amount with negatives as spending, or Debit/Credit, Category,
+  Remarks). Re-uploads are de-duplicated — one growing file or monthly statements both work.
+- **Daily** (the habit that beats every statement): **Add today** — amount, category chip,
+  save. Or paste bank SMS messages, one per line; amounts, merchants and dates are parsed
+  and categorized automatically.
 
-## 4 · What it tells you
+## 4 · What Kept tells you
 
-- **Home** — keep-rate hero, discipline score, honest income (borrowed ≠ earned),
-  and the **path banner**: whether the latest month is on the ramp to your target
-  keep-rate, and whether the current month is ahead or behind pro-rata, in money.
-- **CFO view** — household P&L with margins, three-section cash-flow statement,
-  cost structure & break-even day, five spending controls audited PASS/FAIL,
-  zero-based budget vs actual variance (editable envelopes).
-- **Month-on-month** — years overlaid Jan–Dec, per-month vs-prior-year cards,
-  projections for the next three months and computed cautions.
-- **Analysis** — the full 18-part board pack as a scrolling mobile story
-  (the desktop *Present* button still gives the fullscreen deck with laser pointer).
-- **Life plan** — profile (age, children's birth years, majors like house/car/education),
-  then the brutal math: 5/10/20-year and retirement-age outcomes on your current path
-  vs 20% vs 40%, education coverage per child, and the compounded cost of every
-  undisciplined year. Inflation-adjusted, so the numbers are in today's money.
+- **Home** — the keep-rate hero, discipline score, honest income (borrowed ≠ earned), and
+  the **path banner**: on the ramp to your target keep-rate or deviating, in money, plus
+  ahead/behind pro-rata for the current month.
+- **CFO view** — household P&L with margins, three-section cash-flow statement, cost
+  structure & break-even day, five spending controls audited on the latest month,
+  editable budget-vs-actual variance.
+- **Month-on-month** — years overlaid Jan–Dec, vs-prior-year cards, three-month
+  projections and computed cautions.
+- **Analysis** — the 18-part board pack as a scrolling mobile story (desktop *Present*
+  gives the fullscreen deck with laser pointer).
+- **Life plan** — profile (age, children's birth years, majors), then the brutal math:
+  5/10/20-year and retirement outcomes on your current path vs 20% vs 40%, education
+  coverage per child, and the compounded cost of every undisciplined year — all in
+  today's money.
 
 ## 5 · Privacy model
 
-- Local mode: everything in `localStorage` on your device. Clearing site data erases it —
-  export regularly (upload files are your backup) or enable sync.
-- Sync mode: rows go to *your* Supabase project under *your* account; RLS policies in
-  `schema.sql` mean no other login can read them. This repo contains no analytics.
+Local mode keeps everything in `localStorage` on your device — clearing site data erases
+it, so keep your Excel as backup or enable sync. Sync mode stores rows in *your* Supabase
+project under *your* account; `schema.sql` policies mean no other login can read them.
+This repository contains no analytics and no personal data.
 
 ## 6 · Hacking on it
 
-Plain HTML/CSS/JS, no framework, no bundler. `js/core.js` is the engine
-(parsing, classification, the monthly model); `js/render*.js` the dashboard;
-`js/deck.js` the presentation/story content; `js/life.js` the projections and
-path logic. Chart.js and SheetJS are vendored for full offline use. MIT licensed.
+Plain HTML/CSS/JS, zero dependencies at runtime. `js/core.js` is the engine;
+`js/render*.js` the dashboard; `js/deck.js` the review content; `js/life.js` the
+projections and path logic. Chart.js and SheetJS are vendored in `vendor/` for offline
+use. MIT licensed.

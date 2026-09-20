@@ -1,7 +1,7 @@
 "use strict";
 /* =============== LOCAL STORE — transactions + meta, private to this device =============== */
 const Store = (() => {
- const K_TX="mw_tx", K_META="mw_meta";
+ const K_TX="kept_tx", K_META="kept_meta";
  function hash(r){ // stable id: date|amount|desc
   const s=r[0]+"|"+r[2]+"|"+String(r[1]).slice(0,60);
   let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;

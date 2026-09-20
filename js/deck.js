@@ -72,7 +72,7 @@ function startSlide(){
  if(ms.length>6)  chips.push(["last6","Last 6 months"]);
  const cur=DECKF.mode==="year"?"year:"+DECKF.year:DECKF.mode;
  const dm=DM, nM=dm?dm.fullMonths.length||1:1;
- return `<div class="kick">Money Recovery · Financial Review</div>
+ return `<div class="kick">Kept · the money review</div>
   <h2>One continuous story:<br><b>${ms[0]?monthShort(ms[0]):""} → ${ms.length?monthShort(ms[ms.length-1]):""}</b> and onward</h2>
   <p class="lead">Choose the period to present, then click the right side of the screen (or press →). Press <b>L</b> for the laser pointer, <b>Esc</b> to exit.</p>
   <div class="dfilters">${chips.map(([k,lb])=>`<span class="dfchip ${k===cur?"on":""}" data-scope="${k}">${lb}</span>`).join("")}</div>

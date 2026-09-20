@@ -44,7 +44,7 @@ $$("themeBtn").addEventListener("click",()=>{
  const dark=document.documentElement.dataset.theme==="dark";
  document.documentElement.dataset.theme=dark?"light":"dark";
  $$("themeBtn").textContent=dark?"Dark":"Light";
- try{localStorage.setItem("mr_theme",document.documentElement.dataset.theme);}catch(e){}
+ try{localStorage.setItem("kept_theme",document.documentElement.dataset.theme);}catch(e){}
  renderAll();
 });
 $$("cur").addEventListener("change",e=>{ CUR=e.target.value; renderAll(); });
@@ -83,14 +83,14 @@ function updateBanner(){
  b.innerHTML=txt; b.className="banner on "+st.cls;
 }
 (function boot(){
- try{ const t=localStorage.getItem("mr_theme"); if(t){document.documentElement.dataset.theme=t; $$("themeBtn").textContent=t==="dark"?"Light":"Dark";} }catch(e){}
+ try{ const t=localStorage.getItem("kept_theme"); if(t){document.documentElement.dataset.theme=t; $$("themeBtn").textContent=t==="dark"?"Light":"Dark";} }catch(e){}
  CUR=Store.meta("cur","AED"); $$("cur").value=CUR;
  $$("cur").addEventListener("change",()=>Store.setMeta("cur",CUR));
  RAW=Store.txns();
  QuickAdd.init();
  if(RAW.length){ M=build(RAW); renderAll(); }
  else {
-  $$("hero").innerHTML='<div class="empty"><h2>Bring your money history in</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p></div>';
+  $$("hero").innerHTML='<div class="empty"><h2>Kept starts with one question:<br>how much of your money stays yours?</h2><p>Upload the Excel you already keep (Date, Description, Amount — negative = spent, Category), or start logging today in the <b>Add today</b> tab. Everything stays on this device unless you sign in.</p></div>';
   updateBanner();
  }
  if(typeof Sync!=="undefined") Sync.init();
