@@ -1,5 +1,47 @@
 # Kept — changelog
 
+## v9 — phone layout pass
+
+- **The page could scroll sideways.** Nothing constrained the document width, so any wide
+  child (the CFO statements, a KPI row, a filter bar) pushed the whole layout past the
+  viewport — which is why the header covered only part of the screen in the screenshot.
+  Added `html,body{max-width:100%;overflow-x:hidden}` and `*{min-width:0}` so grid and flex
+  children can actually shrink, plus `max-width:100%` on tables, images and SVGs.
+- **CFO view now fits a phone.** Below 640px every table wraps its text instead of forcing
+  `nowrap`, figures stay on one line, padding tightens, and the least useful column is
+  dropped: "% of revenue" in the P&L, "avg/month" in budget-vs-actual, "target" in the
+  controls audit, the LY column in the month table, the 5-year column in the life table.
+  The full numbers remain on tablet and desktop.
+- **Controls stack instead of squeezing.** Filter bars, search fields and the Add form go
+  to one column; fixed inline widths (220px / 240px / 190px) replaced with flexible ones.
+- **Header reflows** into two comfortable rows with notch-safe padding, and the analysis
+  story cards, history rows, tiles and life-plan form all get phone-sized spacing.
+- Verified with a 360px overflow audit (tables inside scroll wrappers, no fixed width above
+  the viewport, every grid collapses, safe-area rules present) plus the full headless suite.
+
+## v8 — history, income entries and recurring rules
+
+### Fixed
+- **Uploaded Excel rows were invisible after a reset.** Reset cleared transactions but not
+  the tombstone list (`kept_tomb`), so `Store.merge()` kept refusing those hashes — a cloud
+  pull or a re-upload of the same file silently restored nothing. Reset now clears
+  tombstones (and recurring rules), and `push()` drops them once the server confirms the
+  deletes, so they can never accumulate into a permanent blocklist.
+- **History could strand you on one month.** The month filter kept a stale value when the
+  option list was rebuilt (your screenshot: "Jan 26", 1 of 2 shown). It now falls back to
+  *All months* whenever the previous selection no longer exists.
+
+### Added
+- **Money in / Money out toggle** in Add. Income was only loggable by picking a magic
+  "Income" category; there is now an explicit switch, the category chips change with it
+  (Income / Refund / Loan for money in), and the button reads "Save income" or
+  "Save expense". Enter submits.
+- **Recurring rules with an end date.** Rent, EMIs, salary, subscriptions: set amount,
+  category, direction, frequency (weekly / monthly / yearly), start and optional end.
+  Kept writes every occurrence up to today, stops at the end date, handles month-end dates
+  (a rule on the 31st lands on the last day of short months), re-runs idempotently at every
+  boot thanks to hash dedupe, and tells you what the rule commits per year when you save it.
+
 ## v7 — the hero card was never inside a tab
 
 - **Root cause of "the big banner shows on every tab".** The hero card (`<div id="hero">`,

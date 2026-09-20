@@ -112,6 +112,7 @@ function updateBanner(){
  CUR=Store.meta("cur","AED");
  RAW=Store.txns();
  const safe=(name,fn)=>{ try{ fn(); }catch(err){ console.error("Kept: "+name+" failed",err); } };
+ safe("Recurring",()=>{ if(Recurring.rules().length){ Recurring.materialize(); RAW=Store.txns(); } });
  safe("QuickAdd",()=>QuickAdd.init());
  safe("History",()=>History.init());
  safe("Account",()=>Account.render());

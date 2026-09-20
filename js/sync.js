@@ -135,9 +135,12 @@ const Sync = (() => {
    if(error){ lastErr=error.message; console.warn("push",error.message); return; }
   }
   const dead=Store.tombs();
+  let deadOK=true;
   for(let i=0;i<dead.length;i+=200){
-   await sb.from("transactions").delete().eq("user_id",user.id).in("hash",dead.slice(i,i+200));
+   const {error}=await sb.from("transactions").delete().eq("user_id",user.id).in("hash",dead.slice(i,i+200));
+   if(error){ deadOK=false; break; }
   }
+  if(deadOK&&dead.length) Store.clearTombs();   // the server has them; stop filtering locally
   lastErr=null; lastSyncAt=new Date();
   await sb.from("meta").upsert([
    {user_id:user.id, k:"meta",   v:JSON.parse(localStorage.getItem("kept_meta")||"{}")},

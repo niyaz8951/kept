@@ -14,9 +14,16 @@ const History = (() => {
  }
  function render(reset){
   if(reset) shown=150;
-  const q=($$("hxSearch").value||"").toLowerCase(), mo=$$("hxMonth").value, kd=$$("hxKind").value;
-  if(!$$("hxMonth").dataset.built){ $$("hxMonth").innerHTML=monthOpts(); $$("hxMonth").dataset.built="1"; $$("hxMonth").value=mo||"all"; }
+  const q=($$("hxSearch").value||"").toLowerCase(), kd=$$("hxKind").value;
+ let mo=$$("hxMonth").value||"all";
+  const sel=$$("hxMonth");
+  if(!sel.dataset.built){
+   const keep=sel.value||"all";
+   sel.innerHTML=monthOpts(); sel.dataset.built="1";
+   sel.value=[...sel.options].some(o=>o.value===keep)?keep:"all";   // never strand the user on a stale month
+  }
   const all=Store.load().slice().reverse();
+  mo=$$("hxMonth").value||"all";
   const rows=all.filter(r=>{
    if(mo!=="all" && r[0].slice(0,7)!==mo) return false;
    if(kd!=="all" && kindOf(r)!==kd) return false;

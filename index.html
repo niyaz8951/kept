@@ -13,7 +13,7 @@
 <div class="appwrap">
 <header>
  <div class="hrow">
-  <div class="brand">kept<span class="kdot">.</span><small>how much of your money stays yours <span class="ver" id="verTag">v7</span></small></div>
+  <div class="brand">kept<span class="kdot">.</span><small>how much of your money stays yours <span class="ver" id="verTag">v9</span></small></div>
   <div class="spacer"></div>
   <button class="btn primary" id="presBtn" title="Present the review">Present</button>
   <button class="avatar" id="acctBtn" title="Account and settings" aria-label="Account and settings"><span id="avInit" aria-hidden="true">?</span></button>
@@ -98,7 +98,7 @@
    <select class="inp" id="spendPeriod"><option value="all">All months</option></select>
   </label>
   <label>Search transactions
-   <input class="inp" id="txSearch" placeholder="merchant, category…" style="width:220px">
+   <input class="inp" id="txSearch" placeholder="merchant, category…" style="flex:1;min-width:0">
   </label>
  </div>
  <div class="g2">
@@ -126,7 +126,11 @@
  <div class="g2">
   <div class="card an"><h3>Add today's spending</h3>
    <div class="sub">Thirty seconds a day beats waiting for the card statement — the projections and the path check update instantly.</div>
-   <div id="qaTiles" class="tiles"></div>
+   <div class="segbar" role="group" aria-label="Entry type">
+     <button class="seg on" id="qaTypeOut" type="button">Money out</button>
+     <button class="seg" id="qaTypeIn" type="button">Money in</button>
+    </div>
+    <div id="qaTiles" class="tiles"></div>
    <div class="qgrid" style="margin-top:12px">
     <div><label class="sub" for="qaAmt">Amount</label><input class="inp" id="qaAmt" type="number" inputmode="decimal" step="0.01" min="0" enterkeyhint="done" placeholder="0.00" style="width:100%;font-size:22px;height:52px"></div>
     <div><label class="sub" for="qaDate">Date</label><input class="inp" id="qaDate" type="date" style="width:100%;height:52px"></div>
@@ -140,6 +144,22 @@
    <label class="sub" for="qaPaste">Bank messages</label><textarea class="inp" id="qaPaste" rows="6" style="width:100%" placeholder="Purchase of AED 45.60 with card ending 4417 at CARREFOUR, DUBAI..."></textarea>
    <button class="bigbtn ghost" id="qaParse" style="margin-top:10px">Parse &amp; save</button></div>
  </div>
+ <div class="card an"><h3>Recurring — set it once</h3>
+  <div class="sub">Rent, EMIs, salary, subscriptions. Kept writes each occurrence into the record up to today, and stops on the end date.</div>
+  <div class="qgrid" style="margin-top:10px">
+   <div><label class="sub" for="rcAmt">Amount</label><input class="inp" id="rcAmt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" style="width:100%;height:48px"></div>
+   <div><label class="sub" for="rcCat">Category</label><select class="inp" id="rcCat" style="width:100%;height:48px"></select></div>
+   <div class="full"><label class="sub" for="rcDesc">Description</label><input class="inp" id="rcDesc" placeholder="e.g. Apartment rent, Car EMI, Salary" style="width:100%;height:48px"></div>
+   <div><label class="sub" for="rcFreq">Repeats</label><select class="inp" id="rcFreq" style="width:100%;height:48px">
+     <option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="yearly">Yearly</option></select></div>
+   <div><label class="sub" for="rcKind">Type</label><select class="inp" id="rcKind" style="width:100%;height:48px">
+     <option value="out">Money out</option><option value="in">Money in</option></select></div>
+   <div><label class="sub" for="rcStart">Starts</label><input class="inp" id="rcStart" type="date" style="width:100%;height:48px"></div>
+   <div><label class="sub" for="rcEnd">Ends (optional)</label><input class="inp" id="rcEnd" type="date" style="width:100%;height:48px"></div>
+   <div class="full"><button class="bigbtn" id="rcSave">Save recurring rule</button></div>
+  </div>
+  <div id="rcMsg"></div>
+  <div id="rcList" class="qlist" style="margin-top:10px"></div></div>
  <div class="card an"><h3>Recent entries</h3><div class="qlist" id="qaRecent"></div></div>
 </section>
 <section class="tab-pane" id="pane-analysis">
@@ -164,9 +184,9 @@
  <div class="card an"><h3>Transaction history</h3>
   <div class="sub" id="hxCount">Every row Kept holds — uploaded and added — newest first.</div>
   <div class="ctl" style="margin:10px 0 4px;flex-wrap:wrap">
-   <input class="inp" id="hxSearch" type="search" aria-label="Search transactions" placeholder="Search merchant, category, remark…" style="flex:1;min-width:190px">
-   <select class="inp" id="hxMonth" aria-label="Filter by month" style="min-width:130px"></select>
-   <select class="inp" id="hxKind" aria-label="Filter by transaction kind" style="min-width:130px">
+   <input class="inp" id="hxSearch" type="search" aria-label="Search transactions" placeholder="Search merchant, category, remark…" style="flex:1;min-width:0">
+   <select class="inp" id="hxMonth" aria-label="Filter by month"></select>
+   <select class="inp" id="hxKind" aria-label="Filter by transaction kind">
     <option value="all">All kinds</option><option value="expense">Spending</option><option value="income">Income</option>
     <option value="debtpay">EMI / repayment</option><option value="borrowed">Borrowed</option>
     <option value="invest">Investment</option><option value="refund">Refund</option>
@@ -282,7 +302,7 @@
   <div class="sub">Snowball kills the smallest balance first (motivation). Avalanche kills the highest rate first (mathematics).</div>
   <div class="ctl">
    <label>Extra payment per month <span class="num" id="extraLbl" style="font-size:16px;color:var(--pine2)">0</span>
-    <input type="range" id="extraPay" min="0" max="4000" step="100" value="500" style="width:240px"></label>
+    <input type="range" id="extraPay" min="0" max="4000" step="100" value="500" style="flex:1;min-width:0"></label>
   </div>
   <div class="g2">
    <div><div class="chartbox"><canvas id="chPayoff"></canvas></div></div>
@@ -383,6 +403,7 @@
 <script src="js/render.js"></script>
 <script src="js/render2.js"></script>
 <script src="js/deck.js"></script>
+<script src="js/recurring.js"></script>
 <script src="js/quickadd.js"></script>
 <script src="js/life.js"></script>
 <script src="js/analysis.js"></script>

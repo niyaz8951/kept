@@ -201,7 +201,7 @@ function renderTxTable(){
  $$("txCount").textContent = rows.length+" transactions shown (newest first, max 600).";
  let h = `<thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Kind</th><th class="r">Amount</th></tr></thead><tbody>`;
  rows.forEach(t=>{
-  h += `<tr><td class="num">${t.ds}</td><td style="white-space:normal;max-width:340px">${esc(t.desc)}</td><td>${esc(t.cat)}</td>
+  h += `<tr><td class="num">${t.ds}</td><td style="white-space:normal">${esc(t.desc)}</td><td>${esc(t.cat)}</td>
    <td><span class="pill ${t.kind==="income"?"ok":t.kind==="borrowed"?"bad":t.kind==="debtpay"?"warn":t.kind==="refund"?"info":t.kind==="invest"?"info":"warn"}" style="${t.kind==="expense"?"background:var(--line2);color:var(--grey)":""}">${t.kind}</span></td>
    <td class="r num ${t.amt<0?"neg":"pos"}">${money(t.amt)}</td></tr>`; });
  $$("txTable").innerHTML = h+"</tbody>";

@@ -116,7 +116,7 @@ const Account = (() => {
   if(!confirm("Reset EVERYTHING? All transactions, budgets, profile and the path baseline will be deleted"+(u?" here AND in your cloud copy":"")+".")) return;
   if(!confirm("Last check — have you exported? This cannot be undone.")) return;
   if(u) await Sync.deleteCloud();
-  try{ localStorage.removeItem("kept_tx"); localStorage.removeItem("kept_meta"); localStorage.removeItem("kept_budget"); }catch(e){}
+  try{ ["kept_tx","kept_meta","kept_budget","kept_tomb","kept_recur"].forEach(k=>localStorage.removeItem(k)); }catch(e){}
   location.reload();
  }
  return {render, sample, exportAll, toAOA};

@@ -149,7 +149,7 @@ function renderDebt(){
 
  let h=`<thead><tr><th>Loan</th><th class="r">Balance</th><th class="r">APR %</th><th class="r">EMI</th><th class="r">Paid so far</th><th>Last payment</th></tr></thead><tbody>`;
  L.forEach((l,i)=>{ h+=`<tr><td>${esc(l.name)} ${l.est?'<span class="est">estimate</span>':""}</td>
-  <td class="r"><input class="inp num lb-bal" data-i="${i}" type="number" value="${Math.round(l.balance)}" style="width:110px;text-align:right"></td>
+  <td class="r"><input class="inp num lb-bal" data-i="${i}" type="number" value="${Math.round(l.balance)}" style="max-width:110px;text-align:right"></td>
   <td class="r"><input class="inp num lb-apr" data-i="${i}" type="number" step="0.5" value="${l.apr}" style="width:70px;text-align:right"> <span class="est">est.</span></td>
   <td class="r num">${money(l.emi)}</td><td class="r num">${money(l.paid)}</td>
   <td class="num">${l.lastPay?l.lastPay.toISOString().slice(0,10):"—"}</td></tr>`; });

@@ -2,7 +2,7 @@
 /* =============== DAILY ENTRY — type it or paste the bank SMS, no waiting for statements =============== */
 const QuickAdd = (() => {
  const CATS=["Food","Grocery","Transport","Shopping","Utilities","Car","Medicine","Entertainment","Personal","Rent","Loan","Misc","Income"];
- let cat="Food";
+ let cat="Food", dir="out";
  function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
  /* frequent merchants become one-tap tiles: 2 taps to log a repeat expense */
  function frequent(){
@@ -31,20 +31,37 @@ const QuickAdd = (() => {
  }
  function init(){
   $$("qaDate").value=todayISO();
-  $$("qaCats").innerHTML=CATS.map(c=>`<span class="catchip ${c===cat?"on":""}" data-c="${c}">${c}</span>`).join("");
+  paintCats();
   $$("qaCats").addEventListener("click",e=>{ const ch=e.target.closest(".catchip"); if(!ch) return;
    cat=ch.dataset.c; $$("qaCats").querySelectorAll(".catchip").forEach(x=>x.classList.toggle("on",x.dataset.c===cat)); });
+  $$("qaTypeOut").addEventListener("click",()=>setDir("out"));
+  $$("qaTypeIn").addEventListener("click",()=>setDir("in"));
   $$("qaSave").addEventListener("click",saveManual);
+  ["qaAmt","qaDesc"].forEach(id=>$$(id).addEventListener("keydown",e=>{ if(e.key==="Enter") saveManual(); }));
+  Recurring.init();
   $$("qaParse").addEventListener("click",parsePaste);
   renderRecent(); renderTiles();
+ }
+ function setDir(d){
+  dir=d;
+  $$("qaTypeOut").classList.toggle("on",d==="out");
+  $$("qaTypeIn").classList.toggle("on",d==="in");
+  $$("qaTypeIn").classList.toggle("in",d==="in");
+  if(d==="in"&&cat!=="Income"){ cat="Income"; paintCats(); }
+  if(d==="out"&&cat==="Income"){ cat="Food"; paintCats(); }
+  $$("qaSave").textContent = d==="in" ? "Save income" : "Save expense";
+ }
+ function paintCats(){
+  const list = dir==="in" ? ["Income","Refund","Loan"] : CATS.filter(c=>c!=="Income");
+  $$("qaCats").innerHTML=list.map(c=>`<span class="catchip ${c===cat?"on":""}" data-c="${c}" role="button" tabindex="0">${c}</span>`).join("");
  }
  function saveManual(){
   const amt=parseFloat($$("qaAmt").value), desc=($$("qaDesc").value||"").trim()||cat, date=$$("qaDate").value||todayISO();
   if(!amt||amt<=0){ alert("Enter the amount."); return; }
-  const signed = cat==="Income" ? Math.abs(amt) : -Math.abs(amt);
-  const res=Store.merge([[date,desc,signed,cat,"quick-add"]]);
+  const signed = dir==="in" ? Math.abs(amt) : -Math.abs(amt);
+  const res=Store.merge([[date,desc,signed,cat,dir==="in"?"income entry":"quick-add"]]);
   $$("qaAmt").value=""; $$("qaDesc").value="";
-  afterWrite(res, `${cat==="Income"?"+":"−"}${Math.abs(amt)} ${desc}`);
+  afterWrite(res, `${dir==="in"?"+":"−"}${fmt0(Math.abs(amt))} ${desc}`);
  }
  /* bank SMS / notification parser — works on the common Gulf & Indian formats:
     "Purchase of AED 45.60 at CARREFOUR, DUBAI ..." / "AED 120.00 debited ... at NOON" /
@@ -107,5 +124,5 @@ const QuickAdd = (() => {
    RAW=Store.txns(); M=RAW.length?build(RAW):null; renderRecent(); if(M) renderAll();
   }));
  }
- return {init};
+ return {init, todayISO, CATS};
 })();
